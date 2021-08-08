@@ -1,7 +1,5 @@
 # Shell Script
 
----
-
 ## 목차
 
 - [Shell Script](#shell-script)
