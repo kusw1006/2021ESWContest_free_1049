@@ -26,7 +26,7 @@
   + [2. awk](#2-awk)
     - [2-1) Option](#2-1-option)
     - [2-2) RegEX](#2-2-regex)
-    - [2-3) BEGIN/pattern/END](#2-3-begin-pattern-end)
+    - [2-3) BEGIN/pattern/END](#2-3-beginpatternend)
     - [2-4) 내장함수](#2-4-내장함수)
     - [2-5) 예시](#2-5-예시)
   + [3. cut](#3-cut)
