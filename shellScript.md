@@ -2,6 +2,10 @@
 
 ## 목차
 
+[TOC]
+
+
+
 - [출력](#출력)
   + [1. 명령의 실행 결과 저장](#1-명령의-실행-결과-저장)
   + [2. 표준/오류 출력](#2-표준오류-출력)
@@ -21,10 +25,12 @@
   + [1. find](#1-find)
   + [2. awk](#2-awk)
     - [2-1) Option](#2-1-option)
-    - [2-2) 내장 함수](#2-2-내장-함수)
-    - [2-3) 예시](#2-3-예시)
-    - [2-4) RegEX](#2-4-regex)
+    - [2-2) RegEX](#2-2-regex)
+    - [2-3) BEGIN/pattern/END](#2-3-begin-pattern-end)
+    - [2-4) 내장함수](#2-4-내장함수)
+    - [2-5) 예시](#2-5-예시)
   + [3. cut](#3-cut)
+  + [4. grep](#4-grep)
 - [프롬프트 스트링](#프롬프트-스트링)
   + [1. PS1](#1-ps1)
   + [2. PS2](#2-ps2)
@@ -35,6 +41,8 @@
   + [2. 논리 연산자](#2-논리-연산자)
   + [3. 문자열 비교](#3-문자열-비교)
   + [4. 정규표현식](#4-정규표현식)
+
+---
 
 
 
@@ -222,127 +230,7 @@ find [PATH] ! -name [FILE] ! -name [FILE1] ...
 | F    | 문자열을 분리할 기준이 되는 분리문자 입력 |
 | v    | 파라미터 전달                             |
 
-#### 2-2) 내장 함수
-
-| 함수   | 설명                                          |
-| ------ | --------------------------------------------- |
-| sub    | 지정한 문자열 치환                            |
-| gsub   | 문자열 일괄 치환                              |
-| index  | 주어진 문자열과 일치하는 문자의 인덱스를 반환 |
-| length | 문자열의 길이를 반환                          |
-| substr | 시작위치에서 주어진 길이 만큼의 문자열 반환   |
-| split  | 문자열을 분리하여 배열로 반환                 |
-| print  | 문자열 출력                                   |
-| printf | 지정한 포맷에 따라 함수 출력                  |
-
-#### 2-3) 예시
-
-- **print**
-
-```
-$ echo "Hello World" | awk '{ print $0 }'
-Hello World
-
-$ echo "Hello World" | awk '{ print $1 }'
-Hello
-
-$ echo "Hello World" | awk '{ print $2 }'
-World
-
-$ echo "Hello,World" | awk -F "," '{ print $2 }'
-World
-```
-
-- **sub**
-
-```
-$ echo "i have a water." | awk -F " " '{ sub("a", "b", $4); print $4 }'
-wbter.
-```
-
-- **gsub**
-
-```
-$ echo "i have a water." | awk -F " " '{ gsub("a", "b"); print $1" "$2" "$3" "$4 }'
-i hbve b wbter.
-```
-
-- **print**
-
-```
-$ echo "Hello World" | awk '{ print $0 }'
-Hello World
-
-$ echo "Hello World" | awk '{ print $1 }'
-Hello
-
-$ echo "Hello World" | awk '{ print $2 }'
-World
-
-$ echo "Hello,World" | awk -F "," '{ print $2 }'
-World
-```
-
-- **sub**
-
-```
-$ echo "i have a water." | awk -F " " '{ sub("a", "b", $4); print $4 }'
-wbter.
-```
-
-- **gsub**
-
-```
-$ echo "i have a water." | awk -F " " '{ gsub("a", "b"); print $1" "$2" "$3" "$4 }'
-i hbve b wbter.
-```
-
-- **index**
-
-```
-$ echo "i have a water." | awk -F " " '{ print index($4, "a") }'
-2
-```
-
-- **length**
-
-```
-$ echo "i have a water." | awk -F " " '{ print length($4) }'
-6
-```
-
-- **substr**
-
-```
-$ echo "1234567890" | awk -F " " '{ print substr($1, 3, 2) }'
-34
-```
-
-- **split**
-
-```
-$ echo "A/B/C/D/E/F/G" | awk -F " " '{ print split($1, array, "/");print array[1];print array[3]; }'
-7
-A
-C
-```
-
-- **printf**
-
-```
-$ echo | awk '{ printf("%.1f + %.2f = %.3f\n", 40.1, 20.2, 40.1 + 20.2); }'
-40.1 + 20.20 = 60.300
-```
-
-- **system**
-
-```
-# system으로 추가 명령어 실행 
-$ echo "Hello World" | awk '{ system("echo "$1) }'
-Hello
-```
-
-#### 2-4) RegEX
+#### 2-2) RegEX
 
 > awk '행번호~/.../' 형식으로 사용
 
@@ -358,6 +246,214 @@ g h i
 cat c.txt | awk '$2 ~ /^e/'
 # 2번째 행에서 e로 시작하는 문자가 있는 경우 2번째 행 출력
 ```
+
+#### 2-3) BEGIN/pattern/END
+
+> **변수/배열 할당, 출력 명령, 내장 함수 및 제어 흐름문을 조작할 수 있음**
+
+1. BEGIN {cmd} : 변수 초기화, 출력 테이블 헤더 인쇄 등 조작 수행전 실행
+2. pattern {cmd} : 파일 또는 표준 입력에서 1줄을 읽은 후 pattern 블록을 실행하며, 파일을 끝까지 읽을 때까지 1줄씩 스캔하여 프로세스를 반복함
+3. END {cmd} : 입력 스트림을 끝까지 읽었을때 END {cmd} 블록 실행, 집계 정보 처리 등을 주로 수행
+
+#### 2-4) 내장함수
+
+| 함수   | 설명                                          |
+| ------ | --------------------------------------------- |
+| sub    | 지정한 문자열 치환                            |
+| gsub   | 문자열 일괄 치환                              |
+| index  | 주어진 문자열과 일치하는 문자의 인덱스를 반환 |
+| length | 문자열의 길이를 반환                          |
+| substr | 시작위치에서 주어진 길이 만큼의 문자열 반환   |
+| split  | 문자열을 분리하여 배열로 반환                 |
+| print  | 문자열 출력                                   |
+| printf | 지정한 포맷에 따라 함수 출력                  |
+
+
+
+| 내장함수    | 설명                                             |
+| ----------- | ------------------------------------------------ |
+| $n          | 현재 레코드의 n번째 필드                         |
+| $0          | 읽고있는 현재 줄의 텍스트 내용을 포함            |
+| ARGC        | 명령 줄 인수의 수                                |
+| ARGIND      | 명령 줄에서 현재 파일의 위치 (0부터 계산)        |
+| ARGV        | 명령 줄 인수를 포함하는 배열                     |
+| CONVFMT     | 숫자 변환 형식 (기본값은 %.6g)                   |
+| ENVIRON     | 환경 변수의 연관 배열                            |
+| ERRNO       | 마지막 스스템 오류에 대한 설명                   |
+| FIELDWIDTHS | 필드 너비 목록 (공백 막대로 구분)                |
+| FILENAME    | 현재 입력 파일의 이름                            |
+| NR          | 실행 중 현재 줄 번호에 해당하는 레코드 수        |
+| FNR         | NR과 동일하나 현재 파일을 기준                   |
+| FS          | 필드 구분 기호 (기본값은 공백)                   |
+| IGNORECASE  | true인 경우 대소문자를 구분하지 않는 일치가 수행 |
+| NF          | 필드 수를 나타내며 실행 중 현재 필드 수에 해당   |
+| OFMT        | 숫자 출력 형식 (기본 값은 %.6g)                  |
+| OFS         | 출력 필드 구분 기호 (기본값은 공백)              |
+| ORS         | 출력 레코드 구분 기호 (기본값은 줄바꿈)          |
+| RS          | 레코드 구분 기호 (기본값은 줄 바꿈)              |
+| RSTART      | 일치 함수와 일치하는 문자열의 첫 번째 위치       |
+| RLENGTH     | 일치 함수와 일치하는 문자열의 길이               |
+| SUBSEP      | 배열 인덱스 구분 기호 (기본값은 34)              |
+
+
+
+#### 2-5) 예시
+
+- **print**
+
+```shell
+$ echo "Hello World" | awk '{ print $0 }'
+Hello World
+
+$ echo "Hello World" | awk '{ print $1 }'
+Hello
+
+$ echo "Hello World" | awk '{ print $2 }'
+World
+
+$ echo "Hello,World" | awk -F "," '{ print $2 }'
+World
+```
+
+- **sub**
+
+```shell
+$ echo "i have a water." | awk -F " " '{ sub("a", "b", $4); print $4 }'
+wbter.
+```
+
+- **gsub**
+
+```shell
+$ echo "i have a water." | awk -F " " '{ gsub("a", "b"); print $1" "$2" "$3" "$4 }'
+i hbve b wbter.
+```
+
+- **print**
+
+```shell
+$ echo "Hello World" | awk '{ print $0 }'
+Hello World
+
+$ echo "Hello World" | awk '{ print $1 }'
+Hello
+
+$ echo "Hello World" | awk '{ print $2 }'
+World
+
+$ echo "Hello,World" | awk -F "," '{ print $2 }'
+World
+```
+
+- **sub**
+
+```shell
+$ echo "i have a water." | awk -F " " '{ sub("a", "b", $4); print $4 }'
+wbter.
+```
+
+- **gsub**
+
+```shell
+$ echo "i have a water." | awk -F " " '{ gsub("a", "b"); print $1" "$2" "$3" "$4 }'
+i hbve b wbter.
+```
+
+- **index**
+
+```shell
+$ echo "i have a water." | awk -F " " '{ print index($4, "a") }'
+2
+```
+
+- **length**
+
+```shell
+$ echo "i have a water." | awk -F " " '{ print length($4) }'
+6
+```
+
+- **substr**
+
+```shell
+$ echo "1234567890" | awk -F " " '{ print substr($1, 3, 2) }'
+34
+```
+
+- **split**
+
+```shell
+$ echo "A/B/C/D/E/F/G" | awk -F " " '{ print split($1, array, "/");print array[1];print array[3]; }'
+7
+A
+C
+```
+
+- **printf**
+
+```shell
+$ echo | awk '{ printf("%.1f + %.2f = %.3f\n", 40.1, 20.2, 40.1 + 20.2); }'
+40.1 + 20.20 = 60.300
+```
+
+- **system**
+
+```shell
+# system으로 추가 명령어 실행 
+$ echo "Hello World" | awk '{ system("echo "$1) }'
+Hello
+```
+
+
+
+- 외부변수 전달
+
+```SHELL
+VAR=10000
+
+echo | awk -v VARIABLE=${VAR} '{print VARIABLE}'
+```
+
+- 외부 변수를 수신할 내부 변수 정의
+
+```shell
+var1="var1"
+var2="var2"
+echo | awk '{print v1, v2}' v1=$var1 v2=$var2
+```
+
+- 입력 파일에서 올 때
+
+```shell
+awk '{print v1, v2}' v1=$var1 v2=$var2 Exam.txt
+```
+
+- BEGIN에서 정규식 사용
+
+```shell
+awk \
+'BEGIN { 
+		a="100test";
+		if(a~/^100*/) {
+			print "ok";
+		}
+	   }'
+```
+
+- 배열 사용
+
+```shell
+awk \
+	'BEGIN {
+	info="테스트";
+	lens=split(info, tempArray, "");
+	print length(tempArray), lens;
+	}'
+```
+
+
+
+
 
 ### 3. cut
 
@@ -391,6 +487,44 @@ B
 $ echo "A:B:C" | cut -d":" -f 3
 C
 ```
+
+
+
+### 4. grep
+
+>grep [OPTION...] PATTERN [FILE...]
+
+```shell
+-E        : PATTERN을 확장 정규 표현식(Extended RegEx)으로 해석.
+-F        : PATTERN을 정규 표현식(RegEx)이 아닌 일반 문자열로 해석.
+-G        : PATTERN을 기본 정규 표현식(Basic RegEx)으로 해석.
+-P        : PATTERN을 Perl 정규 표현식(Perl RegEx)으로 해석.
+-e        : 매칭을 위한 PATTERN 전달.
+-f        : 파일에 기록된 내용을 PATTERN으로 사용.
+-i        : 대/소문자 무시.
+-v        : 매칭되는 PATTERN이 존재하지 않는 라인 선택.
+-w        : 단어(word) 단위로 매칭.
+-x        : 라인(line) 단위로 매칭.
+-z        : 라인을 newline(\n)이 아닌 NULL(\0)로 구분.
+-m        : 최대 검색 결과 갯수 제한.
+-b        : 패턴이 매치된 각 라인(-o 사용 시 문자열)의 바이트 옵셋 출력.
+-n        : 검색 결과 출력 라인 앞에 라인 번호 출력.
+-H        : 검색 결과 출력 라인 앞에 파일 이름 표시.
+-h        : 검색 결과 출력 시, 파일 이름 무시.
+-o        : 매치되는 문자열만 표시.
+-q        : 검색 결과 출력하지 않음.
+-a        : 바이너리 파일을 텍스트 파일처럼 처리.
+-I        : 바이너리 파일은 검사하지 않음.
+-d        : 디렉토리 처리 방식 지정. (read, recurse, skip)
+-D        : 장치 파일 처리 방식 지정. (read, skip)
+-r        : 하위 디렉토리 탐색.
+-R        : 심볼릭 링크를 따라가며 모든 하위 디렉토리 탐색.
+-L        : PATTERN이 존재하지 않는 파일 이름만 표시.
+-l        : 패턴이 존재하는 파일 이름만 표시.
+-c        : 파일 당 패턴이 일치하는 라인의 갯수 출력.
+```
+
+
 
 ---
 
@@ -629,6 +763,8 @@ PS4 demo script
 | \\v   | vertical tab을 표현하며 수직 탭 문자를 의미                  |
 | \\w   | word를 표현하며 알파벳 + 숫자 + _ 중의 한 문자임을 의미      |
 | \\W   | non word를 표현하며 알파벳 + 숫자 + _가 아닌문자를 의미      |
+| ~     | 정규 표현식과 일치                                           |
+| ~!    | 정규 표현식과 불일치                                         |
 
 
 
@@ -641,19 +777,12 @@ PS4 demo script
 
 
 ``` shell
-# 이메일에서의 사용 예시
-
-/^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i
-
-1.시작을  0~9 사이 숫자 or a-z A-Z 알바펫 아무거나로 시작하고  /  중간에 - _  . 같은 문자가 있을수도 있고 없을수도 있으며
-
-2. 그 후에 0~9 사이 숫자 or a-z A-Z 알바펫중 하나의 문자가 없거나 연달아 나올수 있으며 /  @ 가 반드시 존재하고  
-3. 0-9a-zA-Z 여기서 하나가 있고  /  중간에 - _  . 같은 문자가 있을수도 있고 없을수도 있으며 / 그 후에 0~9 사이 숫자 or a-z A-Z 알바펫중 하나의 
-
-4. 문자가 없거나 연달아 나올수 있으며 /  반드시  .  이 존재하고  / [a-zA-Z] 의 문자가 2개나 3개가 존재 /   이 모든것은 대소문자 구분안함 
+# 이메일에서의 사용 예시/^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i1.시작을  0~9 사이 숫자 or a-z A-Z 알바펫 아무거나로 시작하고  /  중간에 - _  . 같은 문자가 있을수도 있고 없을수도 있으며2. 그 후에 0~9 사이 숫자 or a-z A-Z 알바펫중 하나의 문자가 없거나 연달아 나올수 있으며 /  @ 가 반드시 존재하고  3. 0-9a-zA-Z 여기서 하나가 있고  /  중간에 - _  . 같은 문자가 있을수도 있고 없을수도 있으며 / 그 후에 0~9 사이 숫자 or a-z A-Z 알바펫중 하나의 4. 문자가 없거나 연달아 나올수 있으며 /  반드시  .  이 존재하고  / [a-zA-Z] 의 문자가 2개나 3개가 존재 /   이 모든것은 대소문자 구분안함 
 ```
 
 ---
+
+awk begin end 추가 예정
 
 
 
@@ -669,7 +798,7 @@ find https://recipes4dev.tistory.com/156
 
 PS https://www.thegeekstuff.com/2008/09/bash-shell-take-control-of-ps1-ps2-ps3-ps4-and-prompt_command/
 
-
+awk https://shlee1990.tistory.com/487
 
 정규표현식 https://hamait.tistory.com/342
 
