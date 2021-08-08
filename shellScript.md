@@ -1,49 +1,46 @@
 # Shell Script
 
----
-
 ## 목차
 
-  * [목차](#--)
-  * [출력](#--)
-    - [1. 명령의 실행 결과를 변수에 저장하는 법](#1----------------------)
-    - [2. 표준/오류 출력](#2---------)
-      * [2-1) 표준 오류 출력만을 변수로 설정](#2-1-------------------)
-      * [2-2) 표준 출력 / 표준 오류 출력을 모두 변수로 설정](#2-2-----------------------------)
-    - [3. 변수 출력](#3------)
-      * [3-1) 변수 값 참조](#3-1---------)
-      * [3-2) 특수 참조](#3-2-------)
-      * [3-3) 특수 변수 참조](#3-3----------)
-  * [변수](#--)
-    - [1. 환경변수](#1-----)
-      * [1-1) export](#1-1--export)
-      * [1-2) env](#1-2--env)
-      * [1-3) set](#1-3--set)
-    - [2. 변수 제거](#2------)
-  * [명령어](#---)
-    - [1. find](#1-find)
-    - [2. awk](#2-awk)
-      * [2-1) Option](#2-1--option)
-      * [2-2) 내장 함수](#2-2-------)
-      * [2-3) 예시](#2-3----)
-      * [2-4) RegEX](#2-4--regex)
-    - [3. cut](#3-cut)
-  * [프롬프트 스트링](#--------)
-    - [1. PS1](#1-ps1)
-    - [2. PS2](#2-ps2)
-    - [3. PS3](#3-ps3)
-    - [4. PS4](#4-ps4)
-  * [기타 연산자](#------)
-    - [1. 파일 연산자](#1-------)
-    - [2. 논리 연산자](#2-------)
-    - [3. 문자열 비교](#3-------)
-    - [4. 정규표현식](#4------)
+- [출력](#--)
+  + [1. 명령의 실행 결과 저장](#1.-명령의-실행-결과-저장)
+  + [2. 표준/오류 출력](#2.-표준/오류-출력)
+    - [2-1) 표준 오류 출력만을 변수로 설정](#2-1&#41;-표준-오류-출력만을-변수로-설정)
+    - [2-2) 표준 출력 / 표준 오류 출력을 모두 변수로 설정](#2-2&#41;-표준-출력-/-표준-오류-출력을-모두-변수로-설정)
+  + [3. 변수 출력](#3.-변수-출력)
+    - [3-1) 변수 값 참조](#3-1&#41;-변수-값-참조)
+    - [3-2) 특수 참조](#3-2&#41;-특수-참조)
+    - [3-3) 특수 변수 참조](#3-3&#41;-특수-변수-참조)
+- [변수](#변수)
+  + [1. 환경변수](#1.-환경-변수)
+    - [1-1) export](#1-1&#41;-export)
+    - [1-2) env](#1-2&#41;-env)
+    - [1-3) set](#1-3&#41;-set)
+  + [2. 변수 제거](#2.-변수-제거)
+- [명령어](#명령어)
+  + [1. find](#1.-find)
+  + [2. awk](#2.-awk)
+    - [2-1) Option](#2-1&#41;-option)
+    - [2-2) 내장 함수](#2-2&#41;-내장-함수)
+    - [2-3) 예시](#2-3&#41;-예시)
+    - [2-4) RegEX](#2-4&#41;-regex)
+  + [3. cut](#3-cut)
+- [프롬프트 스트링](#프롬프트-스트링)
+  + [1. PS1](#1.-ps1)
+  + [2. PS2](#2.-ps2)
+  + [3. PS3](#3.-ps3)
+  + [4. PS4](#4.-ps4)
+- [기타 연산자](#기타-연산자)
+  + [1. 파일 연산자](#1.-파일-연산자)
+  + [2. 논리 연산자](#2.-논리-연산자)
+  + [3. 문자열 비교](#3.-문자열-비교)
+  + [4. 정규표현식](#4.-정규표현식)
 
 
 
 ## 출력
 
-#### 1. 명령의 실행 결과를 변수에 저장하는 법
+#### 1. 명령의 실행 결과 저장
 
 ```shell
 VAR=`cmd` 또는 VAR=$(cmd)
@@ -266,7 +263,8 @@ wbter.
 - **gsub**
 
 ```
-$ echo "i have a water." | awk -F " " '{ gsub("a", "b"); print $1" "$2" "$3" "$4 }'i hbve b wbter.
+$ echo "i have a water." | awk -F " " '{ gsub("a", "b"); print $1" "$2" "$3" "$4 }'
+i hbve b wbter.
 ```
 
 - **print**
@@ -407,7 +405,41 @@ C
 > 기본 프롬프트 스트링
 
 ```shell
-PROMPTING       When executing interactively, bash displays the primary prompt PS1 when it is ready to read a command, and the       secondary  prompt  PS2 when it needs more input to complete a command.  Bash allows these prompt strings to be       customized by inserting a number of backslash-escaped special characters that are decoded as follows:              \a     an ASCII bell character (07)              \d     the date in "Weekday Month Date" format (e.g., "Tue May 26")              \D{format}                     the format is passed to strftime(3) and the result is inserted into the prompt string; an  empty                     format results in a locale-specific time representation.  The braces are required              \e     an ASCII escape character (033)              \h     the hostname up to the first ‘.’              \H     the hostname              \j     the number of jobs currently managed by the shell              \l     the basename of the shell’s terminal device name              \n     newline              \r     carriage return              \s     the name of the shell, the basename of $0 (the portion following the final slash)              \t     the current time in 24-hour HH:MM:SS format              \T     the current time in 12-hour HH:MM:SS format              \@     the current time in 12-hour am/pm format              \A     the current time in 24-hour HH:MM format              \u     the username of the current user              \v     the version of bash (e.g., 2.00)              \V     the release of bash, version + patch level (e.g., 2.00.0)              \w     the  current  working  directory,  with  $HOME  abbreviated  with a tilde (uses the value of the                     PROMPT_DIRTRIM variable)              \W     the basename of the current working directory, with $HOME abbreviated with a tilde              \!     the history number of this command              \#     the command number of this command              \$     if the effective UID is 0, a #, otherwise a $              \nnn   the character corresponding to the octal number nnn              \\     a backslash              \[     begin a sequence of non-printing characters, which could be used to  embed  a  terminal  control                     sequence into the prompt              \]     end a sequence of non-printing characters
+PROMPTING
+       When executing interactively, bash displays the primary prompt PS1 when it is ready to read a command, and the
+       secondary  prompt  PS2 when it needs more input to complete a command.  Bash allows these prompt strings to be
+       customized by inserting a number of backslash-escaped special characters that are decoded as follows:
+              \a     an ASCII bell character (07)
+              \d     the date in "Weekday Month Date" format (e.g., "Tue May 26")
+              \D{format}
+                     the format is passed to strftime(3) and the result is inserted into the prompt string; an  empty
+                     format results in a locale-specific time representation.  The braces are required
+              \e     an ASCII escape character (033)
+              \h     the hostname up to the first ‘.’
+              \H     the hostname
+              \j     the number of jobs currently managed by the shell
+              \l     the basename of the shell’s terminal device name
+              \n     newline
+              \r     carriage return
+              \s     the name of the shell, the basename of $0 (the portion following the final slash)
+              \t     the current time in 24-hour HH:MM:SS format
+              \T     the current time in 12-hour HH:MM:SS format
+              \@     the current time in 12-hour am/pm format
+              \A     the current time in 24-hour HH:MM format
+              \u     the username of the current user
+              \v     the version of bash (e.g., 2.00)
+              \V     the release of bash, version + patch level (e.g., 2.00.0)
+              \w     the  current  working  directory,  with  $HOME  abbreviated  with a tilde (uses the value of the
+                     PROMPT_DIRTRIM variable)
+              \W     the basename of the current working directory, with $HOME abbreviated with a tilde
+              \!     the history number of this command
+              \#     the command number of this command
+              \$     if the effective UID is 0, a #, otherwise a $
+              \nnn   the character corresponding to the octal number nnn
+              \\     a backslash
+              \[     begin a sequence of non-printing characters, which could be used to  embed  a  terminal  control
+                     sequence into the prompt
+              \]     end a sequence of non-printing characters
 ```
 
 | 기호 | 비고            |
@@ -419,7 +451,14 @@ PROMPTING       When executing interactively, bash displays the primary prompt P
 
 
 ``` shell
-# 색 코드PURPLE="\[\033[0;35m\]"WHITE="\[\033[1;37m\]"GREEN="\[\033[1;32m\]"NON_COLOR="\[\033[0m\]"# 예시export PS1="[$GREEN\u$WHITE@$PURPLE\h$WHITE \W]\$$NON_COLOR "
+# 색 코드
+PURPLE="\[\033[0;35m\]"
+WHITE="\[\033[1;37m\]"
+GREEN="\[\033[1;32m\]"
+NON_COLOR="\[\033[0m\]"
+
+# 예시
+export PS1="[$GREEN\u$WHITE@$PURPLE\h$WHITE \W]\$$NON_COLOR "
 ```
 
 
@@ -429,7 +468,12 @@ PROMPTING       When executing interactively, bash displays the primary prompt P
 >긴 문자열을 나타낼 때 사용함
 
 ```shell
-# 사용예시ramesh@dev-db ~> myisamchk --silent --force --fast --update-state \> --key_buffer_size=512M --sort_buffer_size=512M \> --read_buffer_size=4M --write_buffer_size=4M \> /var/lib/mysql/bugs/*.MYI[Note: This uses the default ">" for continuation prompt]
+# 사용예시
+ramesh@dev-db ~> myisamchk --silent --force --fast --update-state \
+> --key_buffer_size=512M --sort_buffer_size=512M \
+> --read_buffer_size=4M --write_buffer_size=4M \
+> /var/lib/mysql/bugs/*.MYI
+[Note: This uses the default ">" for continuation prompt]
 ```
 
 
@@ -439,7 +483,29 @@ PROMPTING       When executing interactively, bash displays the primary prompt P
 > select 옵션을 처리할 때 나타나는 문자열
 
 ```shell
-# 사용예시ramesh@dev-db ~> cat ps3.shselect i in mon tue wed exitdo  case $i in    mon) echo "Monday";;    tue) echo "Tuesday";;    wed) echo "Wednesday";;    exit) exit;;  esacdoneramesh@dev-db ~> ./ps3.sh1) mon2) tue3) wed4) exit#? 1Monday#? 4[Note: This displays the default "#?" for select command prompt]
+# 사용예시
+ramesh@dev-db ~> cat ps3.sh
+
+select i in mon tue wed exit
+do
+  case $i in
+    mon) echo "Monday";;
+    tue) echo "Tuesday";;
+    wed) echo "Wednesday";;
+    exit) exit;;
+  esac
+done
+
+ramesh@dev-db ~> ./ps3.sh
+
+1) mon
+2) tue
+3) wed
+4) exit
+#? 1
+Monday
+#? 4
+[Note: This displays the default "#?" for select command prompt]
 ```
 
 
@@ -449,7 +515,25 @@ PROMPTING       When executing interactively, bash displays the primary prompt P
 > 실행을 디버깅 할 때 출력되는 문자열, 명령어가 수행되기전 명령어를 출력해주는 set -x 사용 시 나타남
 
 ```shell
-# 사용 예시ramesh@dev-db ~> cat ps4.shexport PS4='$0.$LINENO+ 'set -xecho "PS4 demo script"ls -l /etc/ | wc -ldu -sh ~ramesh@dev-db ~> ./ps4.sh../ps4.sh.3+ echo 'PS4 demo script'PS4 demo script../ps4.sh.4+ ls -l /etc/../ps4.sh.4+ wc -l243../ps4.sh.5+ du -sh /home/ramesh48K     /home/ramesh[Note: This displays the modified "{script-name}.{line-number}+"       while tracing the output using set -x]
+# 사용 예시
+ramesh@dev-db ~> cat ps4.sh
+
+export PS4='$0.$LINENO+ '
+set -x
+echo "PS4 demo script"
+ls -l /etc/ | wc -l
+du -sh ~
+
+ramesh@dev-db ~> ./ps4.sh
+../ps4.sh.3+ echo 'PS4 demo script'
+PS4 demo script
+../ps4.sh.4+ ls -l /etc/
+../ps4.sh.4+ wc -l
+243
+../ps4.sh.5+ du -sh /home/ramesh
+48K     /home/ramesh
+[Note: This displays the modified "{script-name}.{line-number}+"
+       while tracing the output using set -x]
 ```
 
 ---
