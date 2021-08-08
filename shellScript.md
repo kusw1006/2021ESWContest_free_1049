@@ -1,8 +1,10 @@
 # Shell Script
 
+---
+
 ## 목차
 
-- [Shell Script](#shell-script)
+  * [목차](#--)
   * [출력](#--)
     - [1. 명령의 실행 결과를 변수에 저장하는 법](#1----------------------)
     - [2. 표준/오류 출력](#2---------)
@@ -24,6 +26,7 @@
       * [2-1) Option](#2-1--option)
       * [2-2) 내장 함수](#2-2-------)
       * [2-3) 예시](#2-3----)
+      * [2-4) RegEX](#2-4--regex)
     - [3. cut](#3-cut)
   * [프롬프트 스트링](#--------)
     - [1. PS1](#1-ps1)
@@ -33,6 +36,8 @@
   * [기타 연산자](#------)
     - [1. 파일 연산자](#1-------)
     - [2. 논리 연산자](#2-------)
+    - [3. 문자열 비교](#3-------)
+    - [4. 정규표현식](#4------)
 
 
 
@@ -193,16 +198,12 @@ find [OPTION...] [PATH] [EXPRESSION...]
 | 검색된 파일의 라인 수 출력                                  | find [PATH] -name -exec wc -l {} \;         |
 | 하위 디렉토리 검색하지 않기                                 | find . -maxdepth 1 -name [FILE]             |
 
-
-
 | 표현식                                                       | 설명                        |
 | ------------------------------------------------------------ | --------------------------- |
 | (expression)                                                 | expression 우선순위 지정.   |
 | !expression -not expression                                  | expression 결과에 NOT 연산. |
 | expression -a expression expression -and expression expression expression | expression 간 AND 연산.     |
 | expression -o expression expression -or expression           | expression 간 OR 연산.      |
-
-
 
 ```shell
 # 사용예시
@@ -212,8 +213,6 @@ find [PATH] ! -name [FILE] ! -name [FILE1] ...
 2. 이때 해당/하위 디렉토리에 [FILE]이름을 가진 파일명은 제외
 3. 마찬가지로 [FILE1]이름을 가진 파일명은 제외
 ```
-
-
 
 
 
@@ -241,7 +240,7 @@ find [PATH] ! -name [FILE] ! -name [FILE1] ...
 
 ##### 2-3) 예시
 
-**print**
+- **print**
 
 ```
 $ echo "Hello World" | awk '{ print $0 }'
@@ -257,21 +256,20 @@ $ echo "Hello,World" | awk -F "," '{ print $2 }'
 World
 ```
 
-**sub**
+- **sub**
 
 ```
 $ echo "i have a water." | awk -F " " '{ sub("a", "b", $4); print $4 }'
 wbter.
 ```
 
-**gsub**
+- **gsub**
 
 ```
-$ echo "i have a water." | awk -F " " '{ gsub("a", "b"); print $1" "$2" "$3" "$4 }'
-i hbve b wbter.
+$ echo "i have a water." | awk -F " " '{ gsub("a", "b"); print $1" "$2" "$3" "$4 }'i hbve b wbter.
 ```
 
-**print**
+- **print**
 
 ```
 $ echo "Hello World" | awk '{ print $0 }'
@@ -287,42 +285,42 @@ $ echo "Hello,World" | awk -F "," '{ print $2 }'
 World
 ```
 
-**sub**
+- **sub**
 
 ```
 $ echo "i have a water." | awk -F " " '{ sub("a", "b", $4); print $4 }'
 wbter.
 ```
 
-**gsub**
+- **gsub**
 
 ```
 $ echo "i have a water." | awk -F " " '{ gsub("a", "b"); print $1" "$2" "$3" "$4 }'
 i hbve b wbter.
 ```
 
-**index**
+- **index**
 
 ```
 $ echo "i have a water." | awk -F " " '{ print index($4, "a") }'
 2
 ```
 
-**length**
+- **length**
 
 ```
 $ echo "i have a water." | awk -F " " '{ print length($4) }'
 6
 ```
 
-**substr**
+- **substr**
 
 ```
 $ echo "1234567890" | awk -F " " '{ print substr($1, 3, 2) }'
 34
 ```
 
-**split**
+- **split**
 
 ```
 $ echo "A/B/C/D/E/F/G" | awk -F " " '{ print split($1, array, "/");print array[1];print array[3]; }'
@@ -331,14 +329,14 @@ A
 C
 ```
 
-**printf**
+- **printf**
 
 ```
 $ echo | awk '{ printf("%.1f + %.2f = %.3f\n", 40.1, 20.2, 40.1 + 20.2); }'
 40.1 + 20.20 = 60.300
 ```
 
-**system**
+- **system**
 
 ```
 # system으로 추가 명령어 실행 
@@ -346,7 +344,22 @@ $ echo "Hello World" | awk '{ system("echo "$1) }'
 Hello
 ```
 
+##### 2-4) RegEX
 
+> awk '행번호~/.../' 형식으로 사용
+
+``` shell
+# 사용예시
+
+-- c.txt --
+a b c
+d e f
+g h i
+-----------
+
+cat c.txt | awk '$2 ~ /^e/'
+# 2번째 행에서 e로 시작하는 문자가 있는 경우 2번째 행 출력
+```
 
 #### 3. cut
 
@@ -389,48 +402,12 @@ C
 
 > 사용자의 입력을 대기할 때 나타나는 문자
 
-
-
 #### 1. PS1
 
 > 기본 프롬프트 스트링
 
 ```shell
-PROMPTING
-       When executing interactively, bash displays the primary prompt PS1 when it is ready to read a command, and the
-       secondary  prompt  PS2 when it needs more input to complete a command.  Bash allows these prompt strings to be
-       customized by inserting a number of backslash-escaped special characters that are decoded as follows:
-              \a     an ASCII bell character (07)
-              \d     the date in "Weekday Month Date" format (e.g., "Tue May 26")
-              \D{format}
-                     the format is passed to strftime(3) and the result is inserted into the prompt string; an  empty
-                     format results in a locale-specific time representation.  The braces are required
-              \e     an ASCII escape character (033)
-              \h     the hostname up to the first ‘.’
-              \H     the hostname
-              \j     the number of jobs currently managed by the shell
-              \l     the basename of the shell’s terminal device name
-              \n     newline
-              \r     carriage return
-              \s     the name of the shell, the basename of $0 (the portion following the final slash)
-              \t     the current time in 24-hour HH:MM:SS format
-              \T     the current time in 12-hour HH:MM:SS format
-              \@     the current time in 12-hour am/pm format
-              \A     the current time in 24-hour HH:MM format
-              \u     the username of the current user
-              \v     the version of bash (e.g., 2.00)
-              \V     the release of bash, version + patch level (e.g., 2.00.0)
-              \w     the  current  working  directory,  with  $HOME  abbreviated  with a tilde (uses the value of the
-                     PROMPT_DIRTRIM variable)
-              \W     the basename of the current working directory, with $HOME abbreviated with a tilde
-              \!     the history number of this command
-              \#     the command number of this command
-              \$     if the effective UID is 0, a #, otherwise a $
-              \nnn   the character corresponding to the octal number nnn
-              \\     a backslash
-              \[     begin a sequence of non-printing characters, which could be used to  embed  a  terminal  control
-                     sequence into the prompt
-              \]     end a sequence of non-printing characters
+PROMPTING       When executing interactively, bash displays the primary prompt PS1 when it is ready to read a command, and the       secondary  prompt  PS2 when it needs more input to complete a command.  Bash allows these prompt strings to be       customized by inserting a number of backslash-escaped special characters that are decoded as follows:              \a     an ASCII bell character (07)              \d     the date in "Weekday Month Date" format (e.g., "Tue May 26")              \D{format}                     the format is passed to strftime(3) and the result is inserted into the prompt string; an  empty                     format results in a locale-specific time representation.  The braces are required              \e     an ASCII escape character (033)              \h     the hostname up to the first ‘.’              \H     the hostname              \j     the number of jobs currently managed by the shell              \l     the basename of the shell’s terminal device name              \n     newline              \r     carriage return              \s     the name of the shell, the basename of $0 (the portion following the final slash)              \t     the current time in 24-hour HH:MM:SS format              \T     the current time in 12-hour HH:MM:SS format              \@     the current time in 12-hour am/pm format              \A     the current time in 24-hour HH:MM format              \u     the username of the current user              \v     the version of bash (e.g., 2.00)              \V     the release of bash, version + patch level (e.g., 2.00.0)              \w     the  current  working  directory,  with  $HOME  abbreviated  with a tilde (uses the value of the                     PROMPT_DIRTRIM variable)              \W     the basename of the current working directory, with $HOME abbreviated with a tilde              \!     the history number of this command              \#     the command number of this command              \$     if the effective UID is 0, a #, otherwise a $              \nnn   the character corresponding to the octal number nnn              \\     a backslash              \[     begin a sequence of non-printing characters, which could be used to  embed  a  terminal  control                     sequence into the prompt              \]     end a sequence of non-printing characters
 ```
 
 | 기호 | 비고            |
@@ -442,14 +419,7 @@ PROMPTING
 
 
 ``` shell
-# 색 코드
-PURPLE="\[\033[0;35m\]"
-WHITE="\[\033[1;37m\]"
-GREEN="\[\033[1;32m\]"
-NON_COLOR="\[\033[0m\]"
-
-# 예시
-export PS1="[$GREEN\u$WHITE@$PURPLE\h$WHITE \W]\$$NON_COLOR "
+# 색 코드PURPLE="\[\033[0;35m\]"WHITE="\[\033[1;37m\]"GREEN="\[\033[1;32m\]"NON_COLOR="\[\033[0m\]"# 예시export PS1="[$GREEN\u$WHITE@$PURPLE\h$WHITE \W]\$$NON_COLOR "
 ```
 
 
@@ -459,12 +429,7 @@ export PS1="[$GREEN\u$WHITE@$PURPLE\h$WHITE \W]\$$NON_COLOR "
 >긴 문자열을 나타낼 때 사용함
 
 ```shell
-# 사용예시
-ramesh@dev-db ~> myisamchk --silent --force --fast --update-state \
-> --key_buffer_size=512M --sort_buffer_size=512M \
-> --read_buffer_size=4M --write_buffer_size=4M \
-> /var/lib/mysql/bugs/*.MYI
-[Note: This uses the default ">" for continuation prompt]
+# 사용예시ramesh@dev-db ~> myisamchk --silent --force --fast --update-state \> --key_buffer_size=512M --sort_buffer_size=512M \> --read_buffer_size=4M --write_buffer_size=4M \> /var/lib/mysql/bugs/*.MYI[Note: This uses the default ">" for continuation prompt]
 ```
 
 
@@ -474,29 +439,7 @@ ramesh@dev-db ~> myisamchk --silent --force --fast --update-state \
 > select 옵션을 처리할 때 나타나는 문자열
 
 ```shell
-# 사용예시
-ramesh@dev-db ~> cat ps3.sh
-
-select i in mon tue wed exit
-do
-  case $i in
-    mon) echo "Monday";;
-    tue) echo "Tuesday";;
-    wed) echo "Wednesday";;
-    exit) exit;;
-  esac
-done
-
-ramesh@dev-db ~> ./ps3.sh
-
-1) mon
-2) tue
-3) wed
-4) exit
-#? 1
-Monday
-#? 4
-[Note: This displays the default "#?" for select command prompt]
+# 사용예시ramesh@dev-db ~> cat ps3.shselect i in mon tue wed exitdo  case $i in    mon) echo "Monday";;    tue) echo "Tuesday";;    wed) echo "Wednesday";;    exit) exit;;  esacdoneramesh@dev-db ~> ./ps3.sh1) mon2) tue3) wed4) exit#? 1Monday#? 4[Note: This displays the default "#?" for select command prompt]
 ```
 
 
@@ -506,25 +449,7 @@ Monday
 > 실행을 디버깅 할 때 출력되는 문자열, 명령어가 수행되기전 명령어를 출력해주는 set -x 사용 시 나타남
 
 ```shell
-# 사용 예시
-ramesh@dev-db ~> cat ps4.sh
-
-export PS4='$0.$LINENO+ '
-set -x
-echo "PS4 demo script"
-ls -l /etc/ | wc -l
-du -sh ~
-
-ramesh@dev-db ~> ./ps4.sh
-../ps4.sh.3+ echo 'PS4 demo script'
-PS4 demo script
-../ps4.sh.4+ ls -l /etc/
-../ps4.sh.4+ wc -l
-243
-../ps4.sh.5+ du -sh /home/ramesh
-48K     /home/ramesh
-[Note: This displays the modified "{script-name}.{line-number}+"
-       while tracing the output using set -x]
+# 사용 예시ramesh@dev-db ~> cat ps4.shexport PS4='$0.$LINENO+ 'set -xecho "PS4 demo script"ls -l /etc/ | wc -ldu -sh ~ramesh@dev-db ~> ./ps4.sh../ps4.sh.3+ echo 'PS4 demo script'PS4 demo script../ps4.sh.4+ ls -l /etc/../ps4.sh.4+ wc -l243../ps4.sh.5+ du -sh /home/ramesh48K     /home/ramesh[Note: This displays the modified "{script-name}.{line-number}+"       while tracing the output using set -x]
 ```
 
 ---
@@ -535,7 +460,7 @@ PS4 demo script
 
 #### 1. 파일 연산자
 
-| 문자            | 설명                                                         |
+| 문자 [FILE]     | 설명                                                         |
 | --------------- | ------------------------------------------------------------ |
 | -e              | 파일이 존재                                                  |
 | -f              | 파일이 존재하고 일반 파일인 경우(디렉토리 혹은 장치파일이 아닌 경우) |
@@ -571,6 +496,74 @@ PS4 demo script
 | &&, -a   | 논리 AND |
 | \|\|, -o | 논리 OR  |
 
+
+
+#### 3. 문자열 비교
+
+| 표현                   | 설명                    |
+| ---------------------- | ----------------------- |
+| [String1] = [String2]  | 두 문자열이 같다면 참   |
+| [String1] != [String2] | 두 문자열이 다르면 참   |
+| -n [String]            | 빈 문자열이 아니라면 참 |
+| -z [String]            | 빈 문자열이면 참        |
+
+
+
+#### 4. 정규표현식
+
+| 표현     | 의미                                                         |
+| -------- | ------------------------------------------------------------ |
+| ^x       | 문자열의 시작을 표현하며 x 문자로 시작됨을 의미              |
+| x$       | 문자열의 종료를 표현하며 x 문자로 종료됨을 의미              |
+| .x       | 임의의 한 문자의 자리수를 표현하며 문자열이 x 로 끝난다는 것을 의미 |
+| x+       | 반복을 표현하며 x 문자가 한번 이상 반복됨을 의미             |
+| x?       | 존재여부를 표현하며 x 문자가 존재할 수도, 존재하지 않을 수도 있음을 의미 |
+| x*       | 반복여부를 표현하며 x 문자가 0번 또는 그 이상 반복됨을 의미  |
+| x\|y     | or 를 표현하며 x 또는 y 문자가 존재함을 의미                 |
+| (x)      | 그룹을 표현하며 x 를 그룹으로 처리함을 의미                  |
+| (x)(y)   | 그룹들의 집합을 표현하며 앞에서 부터 순서대로 번호를 부여하여 관리하고 x, y 는 각 그룹의 데이터로 관리됨 |
+| (x)(?:y) | 그룹들의 집합에 대한 예외를 표현하며 그룹 집합으로 관리되지 않음을 의미한 |
+| x{n}     | 반복을 표현하며 x 문자가 n번 반복됨을 의미                   |
+| x{n,}    | 반복을 표현하며 x 문자가 n번 이상 반복됨을 의미              |
+| {n,m}    | 반복을 표현하며 x 문자가 최소 n번 이상 최대 m 번 이하로 반복됨을 의미 |
+
+
+
+| 표현  | 의미                                                         |
+| ----- | ------------------------------------------------------------ |
+| [xy]  | 문자선택을 표현하며 x와 y중의 하나를 의미                    |
+| [^xy] | not을 표현하며 x및 y를 제외한 문자를 의미                    |
+| [x-z] | range를 표현하며 x~z 사이의 문자를 의미                      |
+| \\^   | escape를 의미하며 ^를 문자로 사용함을 의미                   |
+| \\b   | word boundary를 표현하며 문자와 공백사이의 문자를 의미       |
+| \\B   | non word boundary를 표현하며 문자와 공백사이가 아닌 문자를 의미 |
+| \\d   | digit을 표현하며 숫자를 의미                                 |
+| \\D   | non digit을 표현하며 숫자가 아닌 것을 의미                   |
+| \\s   | space를 표현하며 공백 문자를 의미                            |
+| \\S   | non space를 표현하며 공백문자가 아닌것을 의미                |
+| \\t   | tab을 표현하며 탭 문자를 의미                                |
+| \\v   | vertical tab을 표현하며 수직 탭 문자를 의미                  |
+| \\w   | word를 표현하며 알파벳 + 숫자 + _ 중의 한 문자임을 의미      |
+| \\W   | non word를 표현하며 알파벳 + 숫자 + _가 아닌문자를 의미      |
+
+
+
+| Flag | 의미                                                         |
+| ---- | ------------------------------------------------------------ |
+| g    | Global 의 표현하며 대상 문자열내에 모든 패턴들을 검색하는 것을 의미한다. |
+| i    | Ignore case 를 표현하며 대상 문자열에 대해서 대/소문자를 식별하지 않는 것을 의미한다. |
+| m    | Multi line을 표현하며 대상 문자열이 다중 라인의 문자열인 경우에도 검색하는 것을 의미한다. |
+
+
+
+``` shell
+# 이메일에서의 사용 예시/^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i1. 시작을  0~9 사이 숫자 or a-z A-Z 알바펫 아무거나로 시작하고  /  중간에 - _  . 같은 문자가 있을수도 있고 없을수도 있으며 / 2. 그 후에 0~9 사이 숫자 or a-z A-Z 알바펫중 하나의 문자가 없거나 연달아 나올수 있으며 /  @ 가 반드시 존재하고  / 3. 0-9a-zA-Z 여기서 하나가 있고  /  중간에 - _  . 같은 문자가 있을수도 있고 없을수도 있으며 / 그 후에 0~9 사이 숫자 or a-z A-Z 알바펫중 하나의 4. 문자가 없거나 연달아 나올수 있으며 /  반드시  .  이 존재하고  / [a-zA-Z] 의 문자가 2개나 3개가 존재 /   이 모든것은 대소문자 구분안함 
+```
+
+
+
+
+
 ---
 
 
@@ -589,7 +582,7 @@ PS https://www.thegeekstuff.com/2008/09/bash-shell-take-control-of-ps1-ps2-ps3-p
 
 
 
-
+정규표현식 https://hamait.tistory.com/342
 
 if문 https://blackinkgj.github.io/shell-program/
 
