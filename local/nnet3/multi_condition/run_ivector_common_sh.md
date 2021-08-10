@@ -1,3 +1,6 @@
+# From
+> local/chain/multi_condition/run_tdnn_1n.sh
+
 # Param
 
 > - gmmdir = /exp/tri4b
