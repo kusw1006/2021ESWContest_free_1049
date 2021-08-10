@@ -131,6 +131,9 @@ data_lib.RunKaldiCommand("utils/validate_data_dir.sh --no-feats --no-text {outpu
                          .format(output_dir = output_dir))
 ```
 
+> add_prefix_to_fields(input_file, output_file, num_replicas, include_original, prefix, field = [0]) 
+
+> input_file에서의 text를 line별로 받아와 split한 후에 field 위치들에 prefix + str(copy) + "-" + id 형식으로 수정한 후에 output_file에 저장
 
 
 ## generate_reverberated_wav_scp
