@@ -175,6 +175,14 @@ fi
 
 
 
+## Stage 4-7
+
+> 화자인식을 위한 ivector 학습 …
+
+
+
+
+
 - frame-shfit = t: 입력프레임을 t 이동 시킨 뒤, 출력 frame을 subsampling rate 만큼 이동 (3배)
 - rspecifier/wspecifier -> [kaldi I/O 매커니즘](http://kaldi-asr.org/doc/io.html) 확인
 

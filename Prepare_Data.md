@@ -1,5 +1,20 @@
 # Prepare Data
 
+## Variable rule
+
+| affix, prefix | 의미            |
+| ------------- | --------------- |
+| _sp           | speed perturb   |
+| _rvb          | reverberate     |
+| rspecifier    | read specifier  |
+| wspecifier    | write specifier |
+|               |                 |
+|               |                 |
+|               |                 |
+|               |                 |
+
+
+
 
 
 ## Create files
