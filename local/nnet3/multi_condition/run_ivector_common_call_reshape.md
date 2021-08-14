@@ -1,9 +1,10 @@
   # run_ivector_common 통화 데이터 전처리 추가
   ## Code
+  ```shell
   echo "$0: generating phone call noise"
   sed -i '2~2 s\$\sox -t wav - -r 8k -t wav - | sox -t wav - -r 16k -t wav - | sox -t wav - -t wav - highpass 100 | sox -t wav - -t wav - lowpass 1000 | sox -t wav - -t wav - dither -s |\g' data/${trainset}/wav.scp
   sed -i '2~8 s\$\sox -t wav - -t wav - gain 16 |\g' data/${trainset}/wav.scp
-
+  ```
   ## Meaning
   1. 통화 환경과 일치하는 음성 데이터 구축 및 학습
   2. sox pipeline을 구축하여 체계적 음성 데이터 전처리
@@ -30,6 +31,6 @@
   4. decoing 과정 노이즈 추가 효과 삽입
    - sox input.wav output.wav dither -s
   5. 1~4과정은 MFCC의 효율적인 특징 추출을 위해 짝수 데이터에 삽입
-  
+
   6. 추가 gain에 따른 학습을 위해 8번째 데이터마다 gain 16db
    - sox input.wav output.wav gain 16
