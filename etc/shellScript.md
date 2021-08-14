@@ -833,6 +833,14 @@ PS4 demo script
 
 
 
+https://linuxgazette.net/18/bash.html
+
+The Bash Man Page
+
+
+
+
+
 ### 2. if문
 
 
