@@ -2,14 +2,6 @@
 
 
 
-
-
-
-
-
-
-
-
 변경사항:   **.tar.gz**    ->   **.zip**  (corpus 압축 확장자에 맞게)
 
 ​					morfessor version :  **2.0.6**    ->   **2.0.1**
@@ -47,4 +39,6 @@ fi
 
 splitedfiles=$(find $srcdir ! -name '*.zip*' ! -name '.*' ! -name 'normedCorpus*' -name "*.a*")
 ```
+
+
 
