@@ -124,10 +124,12 @@ int ParseOptions::Read(int argc, const char *const argv[]) {
       if (key.compare("config") == 0) {
         ReadConfigFile(value);
       }
+      만약 key 값이 compare라면
       if (key.compare("help") == 0) {
         PrintUsage();
         exit(0);
       }
+      만약 key 값이 help라면
     }
   }
   bool double_dash_seen = false;
@@ -222,3 +224,35 @@ void ParseOptions::NormalizeArgName(std::string *str) {
 ```
 
 _를 -로 바꿔주는 함수
+
+
+## Trim
+void Trim(std::string *str) {
+  const char *white_chars = " \t\n\r\f\v";
+
+  std::string::size_type pos = str->find_last_not_of(white_chars);
+  if (pos != std::string::npos)  {
+    str->erase(pos + 1);
+    pos = str->find_first_not_of(white_chars);
+    if (pos != std::string::npos) str->erase(0, pos);
+  } else {
+    str->erase(str->begin(), str->end());
+  }
+}
+" \t\n\r\f\v"에 해당하는 문자는 모두 삭제
+
+## NumArgs 개수가 1이나 2가 아니라면 exit
+    if (po.NumArgs() != 1 && po.NumArgs() != 2) {
+      po.PrintUsage();
+      exit(1);
+    }
+## GetArg는 positional_args_[i-1] 불어오기, 
+    std::string arpa_rxfilename = po.GetArg(1),
+        fst_wxfilename = po.GetOptArg(2);
+
+  std::string GetOptArg(int param) const {
+    return (param <= NumArgs() ? GetArg(param) : "");
+  }
+
+  fst::SymbolTable* symbols;
+  openfst에서 symbolTable class 선언
