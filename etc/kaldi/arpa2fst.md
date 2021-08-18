@@ -7,19 +7,21 @@ options.Register(&po)
 각종 option flag 선언
 
 ## flag
-    std::string bos_symbol = "<s>";
-    std::string eos_symbol = "</s>";
-    std::string disambig_symbol;
-    std::string read_syms_filename;
-    std::string write_syms_filename;
-    bool keep_symbols = false;
-    bool ilabel_sort = true;
+```c++
+std::string bos_symbol = "<s>";
+std::string eos_symbol = "</s>";
+std::string disambig_symbol;
+std::string read_syms_filename;
+std::string write_syms_filename;
+bool keep_symbols = false;
+bool ilabel_sort = true;
+```
 
 parseoptions에 있는 register 함수를 활용해 bos, eos, disambig 심볼과
 read-symbol, write-symbol, keep-symbols 테이블, ilabel-sort 함수 선언
 
 ## register
-```
+```c++
 po.Register("bos-symbol", &bos_symbol,
                 "Beginning of sentence symbol");
 po.Register("eos-symbol", &eos_symbol,
@@ -42,7 +44,7 @@ po.Register("ilabel-sort", &ilabel_sort,
 Register들은 registerTmpl로 이루어져있음
 
 ## RegisterTmpl
-```
+```c++
 template<typename T>
 void ParseOptions::RegisterTmpl(const std::string &name, T *ptr,
                                 const std::string &doc) {
@@ -60,7 +62,7 @@ void ParseOptions::RegisterTmpl(const std::string &name, T *ptr,
 other_parser_가 Null이면 registercommon으로 가고 아니면 새로운 이름 추가 후 register 재선언
 
 ## registercommon
-```
+```c++
 template<typename T>
 void ParseOptions::RegisterCommon(const std::string &name, T *ptr,
                                   const std::string &doc, bool is_standard) {
@@ -78,8 +80,8 @@ void ParseOptions::RegisterCommon(const std::string &name, T *ptr,
 ## po.read
 po.Read(argc, argv);
 
-
 ## read
+
 들어오는 argument는
 ```
 src/lmbin/arpa2fst \
@@ -88,7 +90,7 @@ src/lmbin/arpa2fst \
 2gram.arpa \
 G.fst
 ```
-```
+```c++
 int ParseOptions::Read(int argc, const char *const argv[]) {
   argc_ = argc;
   argv_ = argv;
@@ -178,7 +180,7 @@ int ParseOptions::Read(int argc, const char *const argv[]) {
 ```
 ## SplitLongArg
 스플릿하는 함수
-```
+```c++
 void ParseOptions::SplitLongArg(const std::string &in,
                                 std::string *key,
                                 std::string *value,
@@ -206,7 +208,8 @@ void ParseOptions::SplitLongArg(const std::string &in,
 ```
 
 ## normalizeargname
-```
+
+```c++
 void ParseOptions::NormalizeArgName(std::string *str) {
   std::string out;
   std::string::iterator it;
@@ -242,13 +245,17 @@ void Trim(std::string *str) {
 " \t\n\r\f\v"에 해당하는 문자는 모두 삭제
 
 ## NumArgs 개수가 1이나 2가 아니라면 exit
-    if (po.NumArgs() != 1 && po.NumArgs() != 2) {
-      po.PrintUsage();
-      exit(1);
-    }
+```c++
+if (po.NumArgs() != 1 && po.NumArgs() != 2) {
+  po.PrintUsage();
+  exit(1);
+}
+```
 ## GetArg는 positional_args_[i-1] 불어오기, 
-    std::string arpa_rxfilename = po.GetArg(1),
-        fst_wxfilename = po.GetOptArg(2);
+```c++
+std::string arpa_rxfilename = po.GetArg(1),
+    fst_wxfilename = po.GetOptArg(2);
+```
 
   std::string GetOptArg(int param) const {
     return (param <= NumArgs() ? GetArg(param) : "");
