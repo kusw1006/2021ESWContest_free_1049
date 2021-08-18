@@ -116,22 +116,22 @@ int ParseOptions::Read(int argc, const char *const argv[]) {
       if (std::strcmp(argv[i], "--") == 0) {
         // a lone "--" marks the end of named options
         break;
-        --만 있으면 break
+        //--만 있으면 break
       }
       bool has_equal_sign;
       SplitLongArg(argv[i], &key, &value, &has_equal_sign);
-      스플릿하는 함수 사용
+      //스플릿하는 함수 사용
       NormalizeArgName(&key);
       Trim(&value);
       if (key.compare("config") == 0) {
         ReadConfigFile(value);
       }
-      만약 key 값이 compare라면
+      //만약 key 값이 config라면
       if (key.compare("help") == 0) {
         PrintUsage();
         exit(0);
       }
-      만약 key 값이 help라면
+      //만약 key 값이 help라면
     }
   }
   bool double_dash_seen = false;
@@ -193,16 +193,16 @@ void ParseOptions::SplitLongArg(const std::string &in,
     *key = in.substr(2, in.size()-2);  // 2 because starts with --.
     *value = "";
     *has_equal_sign = false;
-    예외 처리
+    //예외 처리
   } else if (pos == 2) {  // we also don't allow empty keys: --=value
     PrintUsage(true);
     KALDI_ERR << "Invalid option (no key): " << in;
-    키가 없는 경우
+    //키가 없는 경우
   } else {  // normal case: --option=value
     *key = in.substr(2, pos-2);  // 2 because starts with --.
     *value = in.substr(pos + 1);
     *has_equal_sign = true;
-    정상적인 경우 key와 value, has_equal_sign 값을 저장
+    //정상적인 경우 key와 value, has_equal_sign 값을 저장
   }
 }
 ```
@@ -230,6 +230,7 @@ _를 -로 바꿔주는 함수
 
 
 ## Trim
+```c++
 void Trim(std::string *str) {
   const char *white_chars = " \t\n\r\f\v";
 
@@ -242,6 +243,7 @@ void Trim(std::string *str) {
     str->erase(str->begin(), str->end());
   }
 }
+```
 " \t\n\r\f\v"에 해당하는 문자는 모두 삭제
 
 ## NumArgs 개수가 1이나 2가 아니라면 exit
