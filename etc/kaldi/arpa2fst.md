@@ -8,8 +8,8 @@ options.Register(&po)
 
 ## flag
 ```c++
-std::string bos_symbol = "<s>";
-std::string eos_symbol = "</s>";
+std::string bos_symbol = "<s>";	// begin of sequence
+std::string eos_symbol = "</s>";	// end of sequence
 std::string disambig_symbol;
 std::string read_syms_filename;
 std::string write_syms_filename;
@@ -44,6 +44,7 @@ po.Register("ilabel-sort", &ilabel_sort,
 Register들은 registerTmpl로 이루어져있음
 
 ## RegisterTmpl
+
 ```c++
 template<typename T>
 void ParseOptions::RegisterTmpl(const std::string &name, T *ptr,
