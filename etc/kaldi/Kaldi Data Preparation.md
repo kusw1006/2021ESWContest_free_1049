@@ -199,3 +199,144 @@ SIL(단어의 묵음), SIL_S(묵음자체가 단어), SIL_B …
 
 : 단어 사이의 묵음 SIL 존재
 
+
+
+### 디렉토리 생성
+
+```shell
+utils/prepare_lang.sh data/local/dict "<UNK>" data/local/lang data/lang
+```
+
+입력은 data/local/dict/이고 레이블 <UNK\>는 script에 나타날 때 OOV 단어를 매핑할 사전 단어
+
+data/local/lang은 script가 사용할 임시 폴더이며, data/lang에 실제 출력을 넣음
+
+
+
+#### data/local/dict
+
+> prepare_lang.sh를 실행하기 전 준비되어있어야 하는 local/dict의 파일들
+
+```shell
+ls data/local/dict
+
+extra_questions.txt  lexicon.txt nonsilence_phones.txt  optional_silence.txt  silence_phones.txt
+```
+
+```shell
+head -3 data/local/dict/nonsilence_phones.txt
+
+IY
+B
+D
+
+
+cat data/local/dict/silence_phones.txt
+
+SIL
+SPN
+NSN
+LAU
+
+
+cat data/local/dict/extra_questions.txt
+# 빈 파일
+
+head -5 data/local/dict/lexicon.txt
+!SIL SIL
+-'S S
+-'S Z
+-'T K UH D EN T
+-1K W AH N K EY
+```
+
+
+
+#### lexicon.txt
+
+```shell
+<단어> <phone1> <phone2>
+```
+
+```shell
+head -5 data/local/dict/lexicon.txt
+
+!SIL SIL
+-'S S
+-'S Z
+-'T K UH D EN T
+-1K W AH N K EY
+```
+
+
+
+#### lexiconp.txt
+
+```shell
+<단어> <확률>
+```
+
+각 단어의 가장 가능성 있는 발음의 확률이 1이 되도록 발음 확률을 정규화한 파일
+
+
+
+> lexicon에는 아직 \_B \_E 와 같은 접미사가 없는데,
+>
+> 이는 아직 prepare_lang.sh 를 실행하지 않았기 때문
+
+
+
+### Prepare_lang.sh
+
+```shell
+usage: utils/prepare_lang.sh <dict-src-dir> <oov-dict-entry> <tmp-dir> <lang-dir>
+e.g.: utils/prepare_lang.sh data/local/dict <SPOKEN_NOISE> data/local/lang data/lang
+options:
+     --num-sil-states <number of states>             # default: 5, #states in silence models.
+     --num-nonsil-states <number of states>          # default: 3, #states in non-silence models.
+     --position-dependent-phones (true|false)        # default: true; if true, use _B, _E, _S & _I
+                                                     # markers on phones to indicate word-internal positions.
+     --share-silence-phones (true|false)             # default: false; if true, share pdfs of
+                                                     # all non-silence phones.
+     --sil-prob <probability of silence>             # default: 0.5 [must have 0 < silprob < 1]
+```
+
+
+
+----
+
+
+
+## 자신의 모델 만들기
+
+### format_lm.sh
+
+> arpa 형식의 언어 모델을 openfst로 변환
+
+```shell
+utils/format_lm.sh <lang_dir> <arpa-LM> <lexicon> <out_dir>
+
+E.g.: utils/format_lm.sh data/lang data/local/lm/foo.kn.gz data/local/dict/lexicon.txt data/lang_test
+Convert ARPA-format language models to FSTs.
+```
+
+```shell
+# format_lm 주요 구문)
+
+gunzip -c $lm \
+  | arpa2fst --disambig-symbol=#0 \
+             --read-symbol-table=$out_dir/words.txt - $out_dir/G.fst
+```
+
+이때, arpa2fst는 ARPA 형식 언어 모델을 wFST로 바꿈
+
+
+
+### format_lm_sri.sh
+
+```shell
+Usage: utils/format_lm_sri.sh [options] <lang-dir> <arpa-LM> <out-dir>
+E.g.: utils/format_lm_sri.sh data/lang data/local/lm/foo.kn.gz data/lang_test
+Converts ARPA-format language models to FSTs. Change the LM vocabulary using SRILM.
+```
+
