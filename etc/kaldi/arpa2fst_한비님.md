@@ -1,6 +1,6 @@
 # Grammar : src/lmbin/arpa2fst
 
-
+<br>
 
 ## po & options
 
@@ -15,8 +15,6 @@ ArpaParseOptions options;
 options.Register(&po);
 ```
 
-
-
 <헤더파일>
 
 ParseOptions: src/util/parse-options.h
@@ -25,7 +23,7 @@ ArpaParseOptions: src/lm/arpa-file-parser.h
 
 OptionsItf : src/itf/options-itf.h
 
-
+<br>
 
 - ArpaParseOptions 
 >  src/lm/arpa-file-parser.h
@@ -63,9 +61,9 @@ struct ArpaParseOptions {
 
 Parseoptions -> ArpaParseOptions.Register 로 max-arpa-warnings 전달
 
+<br>
 
-
-
+<br>
 
 ## symbol 정의
 
@@ -105,7 +103,7 @@ Register은 일반적으로 RegisterTmpl 을 따름(다양한 변수형을 위�
 >
 > void RegisterTmpl(const std::string &name, T *ptr, const std::string &doc);
 
-
+<br>
 
 - Register 함수 && RegisterTmpl
 > src/util/parse-options.cc
@@ -161,9 +159,9 @@ other_parser_==NULL 이면 RegisterCommon
 
 첫 선언 때는 NULL임
 
+<br>
 
-
-
+<br>
 
 ## Read
 
@@ -191,9 +189,9 @@ argc(인자 수),  argv(인자 포인터)
 
 disambig_symbol_id 자료형 지정, 초기화
 
+<br>
 
-
-
+<br>
 
 ## fst:: SymbolTable
 
@@ -244,7 +242,7 @@ oov 옵선 = kSkipNGram : oov 단어 나오면 n-gram skip하고 넘어감
 
 disambig_symbol이 비어있지 않으면 symbols에서 disambig_symbol찾아서 disambig_symbol_id에 넣음
 
-
+<br>
 
 비어있다면 -> 새 symbol table 만들고 ARPA file로 채워야함
 
@@ -254,11 +252,11 @@ oov 옵션 = kAddToSymbols: 새 단어 symbol table에 추가함
 
 eps& disambig_sym 추가
 
-
+<br>
 
 bos & eos symbol은 AddSymbol
 
-
+<br>
 
 - fst::SymbolTable::ReadText 
 
@@ -286,7 +284,7 @@ impl=없으면 -> nullptr
 
 move: impl값이 return으로 들어가고 impl은 빈 문자열 됨
 
-
+<br>
 
 - SymbolTable(impl)
 
@@ -303,7 +301,7 @@ shared_ptr: 하나의 특정 객체를 참조하는 스마트 포인터가 몇 �
 
 ~~impl_이 몇 번 참조되는지 counting -> fst state 개수를 나타내지 않을까~~
 
-
+<br>
 
 - AddSymbol(symbol, key)
 
@@ -316,7 +314,7 @@ int64 AddSymbol(std::string_view symbol, int64 key) {
 }
 ```
 
-
+<br>
 
 - MutateCheck()
 
@@ -335,7 +333,9 @@ impl_이 unique하지 않고 mutable하다면 (mutable=값이 변할 수 있는)
 
 사실상 한번 반복하고 종료가 아닌가..
 
+<br>
 
+<br>
 
 ## keep_symbols
 
@@ -350,9 +350,9 @@ keep_symbols = FST를 사용해서 symbol Table 저장. symbol table을 읽거�
 
 ​	 						(안하면 사라짐)
 
+<br>
 
-
-
+<br>
 
 ## Complie LM
 
@@ -371,9 +371,11 @@ arpa_rxfilename 내용 가져오고
 
 ki.Stream() 읽어오기
 
-ArpaLmCompiler::Read 찾아보기
+ArpaLmCompiler::Read 찾아보기 (없으면 다른곳 public...)
 
+<br>
 
+<br>
 
 ## Sort FST
 
@@ -381,10 +383,10 @@ ArpaLmCompiler::Read 찾아보기
     // Sort the FST in-place if requested by options.
     if (ilabel_sort) {
       fst::ArcSort(lm_compiler.MutableFst(), fst::StdILabelCompare());
-    }
+  	}
 ```
 
-
+<br>
 
 - fst::ArcSort
 
@@ -398,7 +400,7 @@ void ArcSort(MutableFst < Arc> *fst, Compare comp){
 }
 ```
 
-
+<br>
 
 - StateMap
 
@@ -431,9 +433,9 @@ void StateMap(MutableFst<A> * fst, C * mapper) {
 }
 ```
 
+<br>
 
-
-
+<br>
 
 ## Write symbols
 
@@ -449,7 +451,7 @@ Dumps a text representation of the symbol table via a stream.
 
 strm과 파일에 저장
 
-
+<br>
 
 - WriteText(source)
 > [symbol-table.cc](http://www.openfst.org/doxygen/fst/html/symbol-table_8cc_source.html), line 392
@@ -476,7 +478,7 @@ bool SymbolTable::WriteText(const std::string& source) const {
 
 kosym.Stream()이 비어있으면 WriteText(std::cout, SymbolTableTextOptions())
 
-
+<br>
 
 비어있지 않으면 std::ofstream strm(source) = file에 적기
 
@@ -484,9 +486,9 @@ strm 없으면 Error (can't open file)
 
 WriteText(strm,option)이 false로 반환되면 Error (write failed)
 
+<br>
 
-
-- WriteText
+- WriteText(strm, options)
 
 > [symbol-table.cc](http://www.openfst.org/doxygen/fst/html/symbol-table_8cc_source.html), line 372
 
@@ -524,11 +526,9 @@ ostringstream: 문자열 format을 조합하여 저장할 때
 
 저장한거 strm에 적어주기
 
+<br>
 
-
-
-
-
+<br>
 
 ## Write LM FST
 
@@ -545,9 +545,9 @@ keep_symbols가 true false면 input, ouput symbols은 write 안함
 
 LM Fst에 kofst.Stream() 적기? -> lm_compiler.Fst().Write 찾아야함
 
+<br>
 
-
-
+- FstWriteOptions
 
 > [fst.h](http://www.openfst.org/doxygen/fst/html/fst_8h_source.html) ,line 101
 
@@ -575,9 +575,9 @@ struct FstWriteOptions {
 };
 ```
 
+<br>
 
-
-
+<br>
 
 ## delete
 
@@ -590,3 +590,4 @@ struct FstWriteOptions {
 }
 ```
 
+symbols 지우고 예외있는지 확인
