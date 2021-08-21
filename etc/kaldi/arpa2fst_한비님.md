@@ -153,11 +153,85 @@ void ParseOptions::RegisterTmpl(const std::string &name, T *ptr,
 }
 ```
 
-other_parser_ != NULL 이면 prefix.name으로 Register
+other_parser_ != NULL 이면 prefix.name으로 다시 Register로
 
 other_parser_==NULL 이면 RegisterCommon
 
 첫 선언 때는 NULL임
+
+<br>
+
+- RegisterCommon(name, ptr, doc, is_standard)
+
+> src/util/parse-options.cc
+
+```c++
+template<typename T>
+void ParseOptions::RegisterCommon(const std::string &name, T *ptr,
+                                  const std::string &doc, bool is_standard) {
+  KALDI_ASSERT(ptr != NULL);
+  std::string idx = name;
+  NormalizeArgName(&idx);
+  if (doc_map_.find(idx) != doc_map_.end())
+    KALDI_WARN << "Registering option twice, ignoring second time: " << name;
+  this->RegisterSpecific(name, idx, ptr, doc, is_standard);
+}
+```
+
+name으로 index찾기 
+
+doc_map_에서 idx찾기 ->있으면 전에 한번 들어갔던거임(두번째는 무시)
+
+없으면 RegisterSpecific에 넣기
+
+<br>
+
+- NormalizeArgName(&idx)
+
+```c++
+void ParseOptions::NormalizeArgName(std::string *str) {
+  std::string out;
+  std::string::iterator it;
+
+  for (it = str->begin(); it != str->end(); ++it) {
+    if (*it == '_')
+      out += '-';  // convert _ to -
+    else
+      out += std::tolower(*it);
+  }
+  *str = out;
+
+  KALDI_ASSERT(str->length() > 0);
+}
+```
+
+이름에서 _는 -로 바꿈
+
+<br>
+
+- RegisterSpecific(name, idx, ptr, doc, is_standard)
+
+> src/util/parse-options.cc 
+>
+> ptr이 가리키는 자료형마다 RegisterSpecific이 다 다름
+
+```c++
+void ParseOptions::RegisterSpecific(const std::string &name,
+                                    const std::string &idx,
+                                    std::string *s,
+                                    const std::string &doc,
+                                    bool is_standard) {
+  string_map_[idx] = s;
+  doc_map_[idx] = DocInfo(name, doc + " (string, default = \"" + *s + "\")",
+                          is_standard);
+}
+```
+
+만약 문자열이면 위의 코드
+
+string_map에 idx & string 추가
+
+doc_map에 idx& DocInfo추가
 
 <br>
 
@@ -193,7 +267,7 @@ disambig_symbol_id 자료형 지정, 초기화
 
 <br>
 
-## fst:: SymbolTable
+## fst:: SymbolTable 
 
 > [fst::SymbolTable -> symbol-table.h](http://www.openfst.org/doxygen/fst/html/symbol-table_8h_source.html) , line 299
 
@@ -230,31 +304,37 @@ disambig_symbol_id 자료형 지정, 초기화
     options.eos_symbol = symbols->AddSymbol(eos_symbol);
 ```
 
-SymbolTable이 비어있지 않으면
-
-SymbolTable 내에 있는 symbol만 사용 가능하므로 read_syms_filename이 존재해야함
+SymbolTable이 비어있지 않으면 SymbolTable 내에 있는 symbol만 사용
 
 SymbolTable 구조: symbol (,key)
 
-kisym.Stream()에서 읽어와서 PrintableWxfilename, symbols에 넣음
+[PrintableWxfilename](https://github.com/kaldi-asr/kaldi/blob/cbed4ff688a172a7f765493d24771c1bd57dcd20/src/util/kaldi-io.cc), line 73
 
-oov 옵선 = kSkipNGram : oov 단어 나오면 n-gram skip하고 넘어감
+: read_syms_filename에서 ""나 "-"가 아니라면 해당 이름 return해줌 -> ReadText의 name이 됨
 
-disambig_symbol이 비어있지 않으면 symbols에서 disambig_symbol찾아서 disambig_symbol_id에 넣음
+impl이 return돼서 symbols에 들어감
 
 <br>
 
-비어있다면 -> 새 symbol table 만들고 ARPA file로 채워야함
+oov 옵선 = kSkipNGram : oov 단어 나오면 n-gram skip하고 넘어감
+
+Symbol Table의 disambig_symbol이 비어있지 않으면 
+
+symbols와 같은  disambig_symbol을 Symbol Table에서 찾아서 key값 disambig_symbol_id에 넣음 -> 없으면 -1
+
+Find(@): @가 key면 symbol찾아서 리턴, symbol이면 key 리턴
+
+<br>
+
+Symbol Table이 비어있다면 -> 새 symbol table 만들고 ARPA file로 채워야함
 
 symbols = fst::SymbolTable 새로 할당해서 wxfilename넣은 
 
 oov 옵션 = kAddToSymbols: 새 단어 symbol table에 추가함
 
-eps& disambig_sym 추가
+eps추가
 
-<br>
-
-bos & eos symbol은 AddSymbol
+disambig& bos& eos addsymbol : symbol값 -1에서 0으로(사용안함에서 사용으로 변경 )
 
 <br>
 
@@ -276,9 +356,11 @@ static SymbolTable* ReadText(
 
 SymbolTable* ReadText: istream로부터 Symbol Table의 text representation을 읽음
 
-WrapUnique: raw  pointer에서 소유권을 받아서 std::unique_ptr에게 반환 & ~~type 추정~~  fst 구조 추정?
+WrapUnique: unique_ptr로 변환
 
-impl=있으면 -> new SymbolTable(std::move(impl))  ~~-> 새로운 단어 받는 느낌~~
+SymbolTableTextOptions(): 음수라벨링 & 필드 구분자
+
+impl=있으면 -> new SymbolTable(std::move(impl))  ~~-> 새로운 심볼받는 느낌~~
 
 impl=없으면 -> nullptr
 
@@ -301,6 +383,10 @@ shared_ptr: 하나의 특정 객체를 참조하는 스마트 포인터가 몇 �
 
 ~~impl_이 몇 번 참조되는지 counting -> fst state 개수를 나타내지 않을까~~
 
+결국 kisym.stream()을 읽었을 때 자료가 존재하면 현재 impl에 넣고 이는 symbols에 들어감 
+
+자료가 존재하지 않는다면 symbols에 nullptr반환
+
 <br>
 
 - AddSymbol(symbol, key)
@@ -308,11 +394,15 @@ shared_ptr: 하나의 특정 객체를 참조하는 스마트 포인터가 몇 �
 > [symbol-table.h](http://www.openfst.org/doxygen/fst/html/symbol-table_8h_source.html) , line 418
 
 ```c++
+virtual int64 AddSymbol(std::string_view symbol, int64 key) = 0;
+
 int64 AddSymbol(std::string_view symbol, int64 key) {
      MutateCheck();
      return impl_->AddSymbol(symbol, key);
 }
 ```
+
+0을 리턴하게 됨(사용하겠다는 의미)
 
 <br>
 
@@ -329,9 +419,9 @@ void MutateCheck() {
 }
 ```
 
-impl_이 unique하지 않고 mutable하다면 (mutable=값이 변할 수 있는)
+impl_이 unique하거나 mutable하지않으면 (mutable=값이 변할 수 있는) 종료
 
-사실상 한번 반복하고 종료가 아닌가..
+위의 조건이 아니라면 unique ptr로 만들고 종료
 
 <br>
 
@@ -369,9 +459,23 @@ ArpaLmCompiler class의 lm_compiler(options, disambig_symbol_id, symbols)정의
 
 arpa_rxfilename 내용 가져오고 
 
-ki.Stream() 읽어오기
+ki.Stream()의 ARPA LM file 읽어오기
 
-ArpaLmCompiler::Read 찾아보기 (없으면 다른곳 public...)
+<br>
+
+- Read(stream)
+
+> [arpa-file-parser.h](https://github.com/kaldi-asr/kaldi/blob/master/src/lm/arpa-file-parser.h) line 96
+
+```c++
+class ArpaFileParser{
+	public:
+		/// Read ARPA LM file from a stream
+		void Read(std::istream &is);
+}
+```
+
+stream에서 ARPA LM file을 읽어옴
 
 <br>
 
@@ -488,6 +592,10 @@ WriteText(strm,option)이 false로 반환되면 Error (write failed)
 
 <br>
 
+strm있고 WriteText(strm,option)도 true로 반환되면 true 반환
+
+<br>
+
 - WriteText(strm, options)
 
 > [symbol-table.cc](http://www.openfst.org/doxygen/fst/html/symbol-table_8cc_source.html), line 372
@@ -541,7 +649,7 @@ ostringstream: 문자열 format을 조합하여 저장할 때
     lm_compiler.Fst().Write(kofst.Stream(), wopts);
 ```
 
-keep_symbols가 true false면 input, ouput symbols은 write 안함
+keep_symbols가 false면 input, ouput symbols은 write 안함
 
 LM Fst에 kofst.Stream() 적기? -> lm_compiler.Fst().Write 찾아야함
 
