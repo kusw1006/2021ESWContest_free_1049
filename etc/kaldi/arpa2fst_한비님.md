@@ -492,7 +492,51 @@ stream에서 ARPA LM file을 읽어옴
 
 <br>
 
-- fst::ArcSort
+- lm_compiler.MutableFst() 
+
+> [arpa-lm-compiler.h](https://github.com/kaldi-asr/kaldi/blob/master/src/lm/arpa-lm-compiler.h) line 42
+
+```c++
+  fst::StdVectorFst* MutableFst() { return &fst_; }
+```
+
+코드내에서 현재 돌고있는 fst의 pointer
+
+
+
+- fst::StdILabelCompare()
+
+> [arcsort.h](http://www.openfst.org/doxygen/fst/html/arcsort_8h_source.html) line 184 & line 223
+
+```c++
+ using StdILabelCompare = ILabelCompare<StdArc>;
+ 
+ // Compare class for comparing input labels of arcs.
+ template < class Arc>
+ class ILabelCompare {
+ public:
+     constexpr ILabelCompare() {}
+
+     constexpr bool operator()(const Arc& lhs, const Arc& rhs) const {
+         return std::forward_as_tuple(lhs.ilabel, lhs.olabel) <
+             std::forward_as_tuple(rhs.ilabel, rhs.olabel);
+
+     }
+
+     constexpr uint64 Properties(uint64 props) const {
+         return (props & kArcSortProperties) | kILabelSorted |
+             (props & kAcceptor ? kOLabelSorted : 0);
+
+     }
+
+ };
+```
+
+ILabelCompare()은 input label을 비교하기 위한 것.. constexpr이 붙었으므로 상수값이 될 예정
+
+
+
+- fst::ArcSort  :  comp에 따라 arc 정렬(입력 수정)
 
 > [arcsort.h](http://www.openfst.org/doxygen/fst/html/arcsort_8h_source.html) , line 102
 
@@ -506,9 +550,22 @@ void ArcSort(MutableFst < Arc> *fst, Compare comp){
 
 <br>
 
+- ArcSortMapper
+
+> [arcsort.h](http://www.openfst.org/doxygen/fst/html/arcsort_8h_source.html) , line 45
+
+```
+constexpr ArcSortMapper(const Fst<Arc>& fst, const Compare& comp)
+    : fst_(fst), comp_(comp), i_(0) {}
+```
+
+fst_ 에는 입력받은 fst, comp_에도 ILabelCompare, i에는 0
+
+
+
 - StateMap
 
-> [state-map.h](http://www.openfst.org/doxygen/fst/html/state-map_8h_source.html), line 91
+> [state-map.h](http://www.openfst.org/doxygen/fst/html/state-map_8h_source.html), line 91 : input fst 수정
 
 ```c++
 // Maps an arc type A using a mapper function object C, passed by pointer. This
@@ -536,6 +593,179 @@ void StateMap(MutableFst<A> * fst, C * mapper) {
     fst->SetProperties(mapper->Properties(props), kFstProperties);
 }
 ```
+
+mapper의 InputSymbolsAction()이 MAP_CLEAR_SYMBOLS면 isymbols=nullptr
+
+fst의 start state가 유효하지 않은 id라면 종료
+
+kFstProperties = all properties (binary & trinary)    [properties.h](http://www.openfst.org/doxygen/fst/html/properties_8h_source.html#l00324)
+
+mapper의 start로 fst start 설정
+
+State iterator가 현재 pointer에서 null이 될때까지
+
+state= siter의 base(pointer)에 해당하는 value(state)
+
+mapper state 설정
+
+state에 해당하는 fst arc 지우기
+
+mapper pointer가 null을 가리킬 때까지
+
+
+
+> [cache.h](http://www.openfst.org/doxygen/fst/html/cache_8h_source.html#l00182) line 358 line 145
+
+```c++
+ void AddArc(State *state, const Arc &arc) { state->AddArc(arc); }
+ 
+ void AddArc(const Arc &arc) {
+      IncrementNumEpsilons(arc);
+      arcs_.push_back(arc);
+    }
+
+void IncrementNumEpsilons(const Arc &arc) {
+      if (arc.ilabel == 0) ++niepsilons_;
+      if (arc.olabel == 0) ++noepsilons_;
+    }
+
+```
+
+
+
+> [cache.h](http://www.openfst.org/doxygen/fst/html/cache_8h_source.html#l00182) line 365 line 182
+
+```c++
+// Deletes all arcs.
+    void DeleteArcs(State *state) { state->DeleteArcs(); }
+// Deletes all arcs.
+    void DeleteArcs() {
+      niepsilons_ = 0;
+      noepsilons_ = 0;
+      arcs_.clear();
+    }
+```
+
+
+
+- InputSymbolsAction
+
+> InputSymbolsAction: [state-map.h](http://www.openfst.org/doxygen/fst/html/state-map_8h_source.html)  (예시) line 434
+>
+> MapSymbolsAction: [arc-map.h](http://www.openfst.org/doxygen/fst/html/arc-map_8h_source.html) line 53
+
+```c++
+constexpr MapSymbolsAction InputSymbolsAction() const {
+      return MAP_@@@_SYMBOLS;	//1
+    }
+
+// Determines how symbol tables are mapped.
+enum MapSymbolsAction {
+    // Symbols should be cleared in the result by the map.
+    MAP_CLEAR_SYMBOLS,
+    // Symbols should be copied from the input FST by the map.
+    MAP_COPY_SYMBOLS,
+    // Symbols should not be modified in the result by the map itself.
+    // (They may set by the mapper).
+    MAP_NOOP_SYMBOLS
+
+};
+```
+
+
+
+- SetInputSymbols
+
+> [fst.h](http://www.openfst.org/doxygen/fst/html/fst_8h_source.html#l00768) line 768
+
+```c++
+void SetInputSymbols(const SymbolTable *isyms) {
+	isymbols_.reset(isyms ? isyms->Copy() : nullptr);
+}
+```
+
+nullptr 받아왔으니까 nullptr로 isymbols_ 교체 (reset: 포인터 교체)
+
+
+
+- start
+
+> [fst.h](http://www.openfst.org/doxygen/fst/html/fst_8h_source.html#l00768) line 152 & line 187
+
+```c++
+int64 Start() const { return start_; }
+
+int64 start_;          // Start state.
+```
+
+
+
+
+
+```c++
+template < class FST>
+class StateIterator {
+public:
+    using Arc = typename FST::Arc;
+    using StateId = typename Arc::StateId;
+
+    explicit StateIterator(const FST& fst) : s_(0) {
+        fst.InitStateIterator(&data_);
+    }
+    
+    bool Done() const {
+        return data_.base ? data_.base->Done() : s_ >= data_.nstates;
+    }
+
+    StateId Value() const { return data_.base ? data_.base->Value() : s_; }
+
+    void Next() {
+        if (data_.base) {
+            data_.base->Next();
+        }
+        else {
+            ++s_;
+        }
+    }
+
+    void Reset() {
+        if (data_.base) {
+            data_.base->Reset();
+        }
+        else {
+            s_ = 0;
+        }
+    }
+
+private:
+    StateIteratorData<Arc> data_;
+    StateId s_;
+};
+```
+
+StateIterator에서 사용하는 data는 StateIteratorData의 data임
+
+
+
+```c++
+template < class Arc>
+struct StateIteratorData {
+    using StateId = typename Arc::StateId;
+
+    // Specialized iterator if non-null.
+    std::unique_ptr<StateIteratorBase<Arc>> base;
+    // Otherwise, the total number of states.
+    StateId nstates;
+
+    StateIteratorData() : base(nullptr), nstates(0) {}
+
+    StateIteratorData(const StateIteratorData&) = delete;
+    StateIteratorData& operator=(const StateIteratorData&) = delete;
+
+};
+```
+
+
 
 <br>
 
