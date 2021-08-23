@@ -450,3 +450,59 @@ std::string arpa_rxfilename = po.GetArg(1),
 
   fst::SymbolTable* symbols;
   openfst에서 symbolTable class 선언
+
+## readconfigfile
+```c++
+void ParseOptions::ReadConfigFile(const std::string &filename) {
+  std::ifstream is(filename.c_str(), std::ifstream::in);
+  if (!is.good()) {
+    KALDI_ERR << "Cannot open config file: " << filename;
+  }
+
+  std::string line, key, value;
+  int32 line_number = 0;
+  while (std::getline(is, line)) {
+    line_number++;
+    // trim out the comments
+    size_t pos;
+    if ((pos = line.find_first_of('#')) != std::string::npos) {
+      line.erase(pos);
+    }
+    // skip empty lines
+    Trim(&line);
+    if (line.length() == 0) continue;
+
+    if (line.substr(0, 2) != "--") {
+      KALDI_ERR << "Reading config file " << filename
+                << ": line " << line_number << " does not look like a line "
+                << "from a Kaldi command-line program's config file: should "
+                << "be of the form --x=y.  Note: config files intended to "
+                << "be sourced by shell scripts lack the '--'.";
+    }
+
+    // parse option
+    bool has_equal_sign;
+    SplitLongArg(line, &key, &value, &has_equal_sign);
+    NormalizeArgName(&key);
+    Trim(&value);
+    if (!SetOption(key, value, has_equal_sign)) {
+      PrintUsage(true);
+      KALDI_ERR << "Invalid option " << line << " in config file " << filename;
+    }
+  }
+}
+```
+
+
+## readtext
+```c++
+SymbolTable *SymbolTable::ReadText(const std::string &source,
+                                    const SymbolTableTextOptions &opts) {
+   std::ifstream strm(source, std::ios_base::in);
+   if (!strm.good()) {
+     LOG(ERROR) << "SymbolTable::ReadText: Can't open file: " << source;
+     return nullptr;
+   }
+   return ReadText(strm, source, opts);
+ }
+```
