@@ -81,8 +81,8 @@ struct ArpaParseOptions {
 
 ## flag
 ```c++
-std::string bos_symbol = "<s>";
-std::string eos_symbol = "</s>";
+std::string bos_symbol = "<s>";	// begin of sentence
+std::string eos_symbol = "</s>";	// end of sentence
 std::string disambig_symbol;
 std::string read_syms_filename;
 std::string write_syms_filename;
@@ -94,6 +94,7 @@ parseoptions에 있는 register 함수를 활용해 bos, eos, disambig 심볼과
 read-symbol, write-symbol, keep-symbols 테이블, ilabel-sort 함수 선언
 
 ## register
+
 ```c++
 po.Register("bos-symbol", &bos_symbol,
                 "Beginning of sentence symbol");
@@ -117,6 +118,7 @@ po.Register("ilabel-sort", &ilabel_sort,
 Register들은 registerTmpl로 이루어져있음
 
 ## RegisterTmpl
+
 ```c++
 template<typename T>
 void ParseOptions::RegisterTmpl(const std::string &name, T *ptr,
@@ -156,7 +158,7 @@ class ParseOptions : public OptionsItf {
                      "Verbose level (higher->more logging)");
     //도움말
   }
-  ```
+```
 
   registerstandard는 registercommon을 불러온다. is_standard는 true
 
@@ -193,7 +195,7 @@ typedef std::map<std::string, DocInfo> DocMapType;
     std::string use_msg_;
     bool is_standard_;
   };
-  ```
+```
 
 ## registerspecific
 
