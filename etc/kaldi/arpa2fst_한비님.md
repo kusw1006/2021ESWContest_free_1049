@@ -404,6 +404,8 @@ int64 AddSymbol(std::string_view symbol, int64 key) {
 
 0을 리턴하게 됨(사용하겠다는 의미)
 
+AddSymbol("symbol")에서 symbol이 이미 SymbolTable에 존재하면 그것을 사용하고 아니면 추가해준다는 의미
+
 <br>
 
 - MutateCheck()
@@ -929,3 +931,74 @@ struct FstWriteOptions {
 ```
 
 symbols 지우고 예외있는지 확인
+
+<br>
+
+<br>
+
+- lm_compiler.Fst()
+> [alpa-lm-compiler.h](https://github.com/kaldi-asr/kaldi/blob/master/src/lm/arpa-lm-compiler.h) ,line 41
+```c++
+const fst::StdVectorFst& Fst() const { return fst_; }
+```
+
+- StdVectorFst
+> [fst-decl.h](http://www.openfst.org/doxygen/fst/html/fst-decl_8h_source.html) ,line 215
+```c++
+using StdVectorFst = VectorFst<StdArc>;
+
+bool Write(std::ostream &strm, const FstWriteOptions &opts) const override {
+  return WriteFst(*this, strm, opts);
+```
+
+- WriteFst
+> [vector-fst.h](http://www.openfst.org/doxygen/fst/html/fst-decl_8h_source.html) ,line 630
+```c++
+template <class Arc, class State>
+template <class FST>
+bool VectorFst<Arc, State>::WriteFst(const FST &fst, std::ostream &strm, const FstWriteOptions &opts){
+  static constexpr int file_version = 2;
+  bool update_header = true;
+  FstHeader hdr;
+  hdr.SetStart(fst.Start());
+  hdr.SetNumStates(kNoStateId);
+  std::streampos start_offset = 0;
+  if(fst.Properties(kExpanded, false) || opts.stream_write || (start_offset = strm.tellp()) != -1){
+    hdr.SetNumStates(CountStates(fst));
+    update_header = false;
+  }
+  const auto properties = fst.Properties(kCopyProperties, false) | Impl::kStaticProperties;
+  internal::FstImpl<Arc>::WriteFstHeader(fst, strm, opts, file_version, "vector", properties, &hdr);
+  Stateld num_states = 0;
+  for(StateIterator<FST> siter(fst); !siter.Done(); siter.Next()){
+    const auto s = siter.Value();
+    fst.Final(s).Write(strm);
+    const int64 narcs = fst.NumArcs(s);
+    WriteType(strm, narcs);
+    for(ArcIterator<FST> aiter(fst,s); !aiter.Done(); aiter.Next()){
+      const auto &arc = aiter.Value();
+      WriteType(strm, arc.ilabel);
+      WriteType(strm, arc.olabel);
+      arc.weight.Write(strm);
+      WriteType(strm, arc.nextstate);
+    }
+    ++num_states;
+  }
+  strm.flush();
+  if(!strm){
+    LOG(ERROR) << "VectorFst::Write: Write failed: " << opts.source;
+    return false;
+  }
+  if(update_header){
+    hdr.SetNumStates(num_states);
+    return internal::FstImpl<Arc>::UpdateFstHeader(fst, strm, opts, file_version, "vector", properties, &hdr, start_offset);
+  } else{
+    if(num_states != hdr.NumStates()){
+      LOG(ERROR) << "Inconsistent number of states observed during write";
+      return false;
+    }
+  }
+  return true;
+}
+```
+
