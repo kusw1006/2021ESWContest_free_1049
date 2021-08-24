@@ -1,4 +1,4 @@
-arpa2fst.cc 코드 분석
+arpa2fst.cc 코드 분석.
 
 ## KALDI_ASSERT -> kaldi-error.h
 ```c++
@@ -81,8 +81,8 @@ struct ArpaParseOptions {
 
 ## flag
 ```c++
-std::string bos_symbol = "<s>";	// begin of sentence
-std::string eos_symbol = "</s>";	// end of sentence
+std::string bos_symbol = "<s>"; //begin of sentence
+std::string eos_symbol = "</s>"; //end of sentence
 std::string disambig_symbol;
 std::string read_syms_filename;
 std::string write_syms_filename;
@@ -94,7 +94,6 @@ parseoptions에 있는 register 함수를 활용해 bos, eos, disambig 심볼과
 read-symbol, write-symbol, keep-symbols 테이블, ilabel-sort 함수 선언
 
 ## register
-
 ```c++
 po.Register("bos-symbol", &bos_symbol,
                 "Beginning of sentence symbol");
@@ -118,7 +117,6 @@ po.Register("ilabel-sort", &ilabel_sort,
 Register들은 registerTmpl로 이루어져있음
 
 ## RegisterTmpl
-
 ```c++
 template<typename T>
 void ParseOptions::RegisterTmpl(const std::string &name, T *ptr,
@@ -158,7 +156,7 @@ class ParseOptions : public OptionsItf {
                      "Verbose level (higher->more logging)");
     //도움말
   }
-```
+  ```
 
   registerstandard는 registercommon을 불러온다. is_standard는 true
 
@@ -195,7 +193,7 @@ typedef std::map<std::string, DocInfo> DocMapType;
     std::string use_msg_;
     bool is_standard_;
   };
-```
+  ```
 
 ## registerspecific
 
@@ -452,3 +450,255 @@ std::string arpa_rxfilename = po.GetArg(1),
 
   fst::SymbolTable* symbols;
   openfst에서 symbolTable class 선언
+
+## readconfigfile
+```c++
+void ParseOptions::ReadConfigFile(const std::string &filename) {
+  std::ifstream is(filename.c_str(), std::ifstream::in);
+  if (!is.good()) {
+    KALDI_ERR << "Cannot open config file: " << filename;
+  }
+
+  std::string line, key, value;
+  int32 line_number = 0;
+  while (std::getline(is, line)) {
+    line_number++;
+    // trim out the comments
+    size_t pos;
+    if ((pos = line.find_first_of('#')) != std::string::npos) {
+      line.erase(pos);
+    }
+    // skip empty lines
+    Trim(&line);
+    if (line.length() == 0) continue;
+
+    if (line.substr(0, 2) != "--") {
+      KALDI_ERR << "Reading config file " << filename
+                << ": line " << line_number << " does not look like a line "
+                << "from a Kaldi command-line program's config file: should "
+                << "be of the form --x=y.  Note: config files intended to "
+                << "be sourced by shell scripts lack the '--'.";
+    }
+
+    // parse option
+    bool has_equal_sign;
+    SplitLongArg(line, &key, &value, &has_equal_sign);
+    NormalizeArgName(&key);
+    Trim(&value);
+    if (!SetOption(key, value, has_equal_sign)) {
+      PrintUsage(true);
+      KALDI_ERR << "Invalid option " << line << " in config file " << filename;
+    }
+  }
+}
+```
+
+
+## readtext
+```c++
+SymbolTable *SymbolTable::ReadText(const std::string &source,
+                                    const SymbolTableTextOptions &opts) {
+   std::ifstream strm(source, std::ios_base::in);
+   if (!strm.good()) {
+     LOG(ERROR) << "SymbolTable::ReadText: Can't open file: " << source;
+     return nullptr;
+   }
+   return ReadText(strm, source, opts);
+ }
+```
+
+## mutatecheck() -> openfst.org
+```c++
+void MutateCheck(){
+  if(impl_.unique() || !impl_->IsMutable()) return;
+  std::unique_ptr<internal::SymbolTableImplBase> copy = impl_->Copy();
+  CHECK(copy != nullptr);
+  impl_ = std::move(copy);
+}
+
+std::shared_ptr<internal::SymbolTableImplBase> impl_;
+```
+
+## Output 함수 kaldi-io.cc
+```c++
+Output::Output(const std::string &wxfilename, bool binary,
+               bool write_header):impl_(NULL) {
+  if (!Open(wxfilename, binary, write_header)) {
+    if (impl_) {
+      delete impl_;
+      impl_ = NULL;
+    }
+    KALDI_ERR << "Error opening output stream " <<
+        PrintableWxfilename(wxfilename);
+  }
+}
+```
+
+## Open 함수 kaldi-io.cc
+```c++
+bool Output::Open(const std::string &wxfn, bool binary, bool header) {
+  if (IsOpen()) {
+    if (!Close()) {  // Throw here rather than return status, as it's an error
+      // about something else: if the user wanted to avoid the exception he/she
+      // could have called Close().
+      KALDI_ERR << "Output::Open(), failed to close output stream: "
+                << PrintableWxfilename(filename_);
+    }
+  }
+
+  filename_ = wxfn;
+
+  OutputType type = ClassifyWxfilename(wxfn);
+  KALDI_ASSERT(impl_ == NULL);
+
+  if (type ==  kFileOutput) {
+    impl_ = new FileOutputImpl();
+  } else if (type == kStandardOutput) {
+    impl_ = new StandardOutputImpl();
+  } else if (type == kPipeOutput) {
+    impl_ = new PipeOutputImpl();
+  } else {  // type == kNoOutput
+    KALDI_WARN << "Invalid output filename format "<<
+        PrintableWxfilename(wxfn);
+    return false;
+  }
+  if (!impl_->Open(wxfn, binary)) {
+    delete impl_;
+    impl_ = NULL;
+    return false;  // failed to open.
+  } else {  // successfully opened it.
+    if (header) {
+      InitKaldiOutputStream(impl_->Stream(), binary);
+      bool ok = impl_->Stream().good();  // still OK?
+      if (!ok) {
+        delete impl_;
+        impl_ = NULL;
+        return false;
+      }
+      return true;
+    } else {
+      return true;
+    }
+  }
+}
+```
+
+## ClassifiyWxfilename kaldi-io.cc
+```c++
+OutputType ClassifyWxfilename(const std::string &filename) {
+  const char *c = filename.c_str();
+  size_t length = filename.length();
+  char first_char = c[0],
+      last_char = (length == 0 ? '\0' : c[filename.length()-1]);
+
+  // if 'filename' is "" or "-", return kStandardOutput.
+  if (length == 0 || (length == 1 && first_char == '-'))
+    return kStandardOutput;
+  else if (first_char == '|') return kPipeOutput;  // An output pipe like "|blah".
+  else if (isspace(first_char) || isspace(last_char) || last_char == '|') {
+      return kNoOutput;  // Leading or trailing space: can't interpret this.
+                         // Final '|' would represent an input pipe, not an
+                         // output pipe.
+  } else if ((first_char == 'a' || first_char == 's') &&
+             strchr(c, ':') != NULL &&
+             (ClassifyWspecifier(filename, NULL, NULL, NULL) != kNoWspecifier ||
+              ClassifyRspecifier(filename, NULL, NULL) != kNoRspecifier)) {
+    // e.g. ark:something or scp:something... this is almost certainly a
+    // scripting error, so call it an error rather than treating it as a file.
+    // In practice in modern kaldi scripts all (r,w)filenames begin with "ark"
+    // or "scp", even though technically speaking options like "b", "t", "s" or
+    // "cs" can appear before the ark or scp, like "b,ark".  For efficiency,
+    // and because this code is really just a nicety to catch errors earlier
+    // than they would otherwise be caught, we only call those extra functions
+    // for filenames beginning with 'a' or 's'.
+    return kNoOutput;
+  } else if (isdigit(last_char)) {
+    // This could be a file, but we have to see if it's an offset into a file
+    // (like foo.ark:4314328), which is not allowed for writing (but is
+    // allowed for reaching).  This eliminates some things which would be
+    // valid UNIX filenames but are not allowed by Kaldi.  (Even if we allowed
+    // such filenames for writing, we woudln't be able to correctly read them).
+    const char *d = c + length - 1;
+    while (isdigit(*d) && d > c) d--;
+    if (*d == ':') return kNoOutput;
+    // else it could still be a filename; continue to the next check.
+  }
+
+  // At this point it matched no other pattern so we assume a filename, but we
+  // check for internal '|' as it's a common source of errors to have pipe
+  // commands without the pipe in the right place.  Say that it can't be
+  // classified.
+  if (strchr(c, '|') != NULL) {
+    KALDI_WARN << "Trying to classify wxfilename with pipe symbol in the"
+        " wrong place (pipe without | at the beginning?): " <<
+        filename;
+    return kNoOutput;
+  }
+  return kFileOutput;  // It matched no other pattern: assume it's a filename.
+}
+```
+
+## fst() arpa-lm-compiler.h
+```c++
+lm_compiler.Fst().Write(kofst.Stream(), wopts);
+
+ const fst::StdVectorFst& Fst() const { return fst_; }
+
+ using StdVectorFst = VectorFst<StdArc>;
+
+ bool Write(std::ostream &strm, const FstWriteOptions &opts) const override {
+  return WriteFst(*this, strm, opts);
+}
+
+WriteFst -> openfst(vector-fst.h에서 찾아보면 630줄)
+```
+
+## vectorfst<arc, state>
+```c++
+template <class Arc, class State>
+template <class FST>
+bool VectorFst<Arc, State>::WriteFst(const FST &fst, std::ostream &strm, const FstWriteOptions &opts){
+  static constexpr int file_version = 2;
+  bool update_header = true;
+  FstHeader hdr;
+  hdr.SetStart(fst.Start());
+  hdr.SetNumStates(kNoStateId);
+  std::streampos start_offset = 0;
+  if(fst.Properties(kExpanded, false) || opts.stream_write || (start_offset = strm.tellp()) != -1){
+    hdr.SetNumStates(CountStates(fst));
+    update_header = false;
+  }
+  const auto properties = fst.Properties(kCopyProperties, false) | Impl::kStaticProperties;
+  internal::FstImpl<Arc>::WriteFstHeader(fst, strm, opts, file_version, "vector", properties, &hdr);
+  Stateld num_states = 0;
+  for(StateIterator<FST> siter(fst); !siter.Done(); siter.Next()){
+    const auto s = siter.Value();
+    fst.Final(s).Write(strm);
+    const int64 narcs = fst.NumArcs(s);
+    WriteType(strm, narcs);
+    for(ArcIterator<FST> aiter(fst,s); !aiter.Done(); aiter.Next()){
+      const auto &arc = aiter.Value();
+      WriteType(strm, arc.ilabel);
+      WriteType(strm, arc.olabel);
+      arc.weight.Write(strm);
+      WriteType(strm, arc.nextstate);
+    }
+    ++num_states;
+  }
+  strm.flush();
+  if(!strm){
+    LOG(ERROR) << "VectorFst::Write: Write failed: " << opts.source;
+    return false;
+  }
+  if(update_header){
+    hdr.SetNumStates(num_states);
+    return internal::FstImpl<Arc>::UpdateFstHeader(fst, strm, opts, file_version, "vector", properties, &hdr, start_offset);
+  } else{
+    if(num_states != hdr.NumStates()){
+      LOG(ERROR) << "Inconsistent number of states observed during write";
+      return false;
+    }
+  }
+  return true;
+}
+```
