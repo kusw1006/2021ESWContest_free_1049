@@ -19,7 +19,7 @@
 # 4. parameters: nCPU, num_jobs_initial, num_jobs_final, --max-noises-per-minute
 
 data=./speechDATA
-nCPU=16
+nCPU=28
 
 . ./cmd.sh
 . ./path.sh
@@ -177,7 +177,7 @@ steps/align_fmllr.sh --nj $nCPU --cmd "$train_cmd" \
 
 finishTime=$(date +'%F-%H-%M')
 echo "GMM trainig is finished at" $finishTime
-exit
+
 ## online chain recipe using only clean data set
 echo "#### online chain training  ###########"
 ## check point: sudo nvidia-smi --compute-mode=3 if you have multiple GPU's
@@ -193,4 +193,5 @@ echo "DNN trainig is finished at" $finishTime
 echo "started at" $startTime
 echo "finished at" $finishTime
 exit 0;
+
 ```
