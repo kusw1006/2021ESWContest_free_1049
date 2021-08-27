@@ -1,2 +1,0 @@
- # make the G.fst for the extra words.  Just assign equal probabilities to all of
-  # them.  The words will all transition from state 1 to 2.
