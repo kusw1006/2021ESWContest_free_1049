@@ -257,3 +257,108 @@ fsttablecompose L_disambig.fst G.fst |\
 ![](./img/chanhyun3.png)
 
 > #0 자체 루프는 L과 G를 병합할 때, G에서의 Special symbol을 처리하기 위해 만들어 놓은 경로
+
+
+
+#### C.fst
+
+> ilabel_info 라는 kaldi의 data structure을 이용하여 지정되는 triphone-id를 입력으로 넣음
+
+- ilabel_info
+
+  - 열의 'index'는 triphone의 id
+
+  - 행의 값들은 context independent phone의 id가 들어있음
+
+    C.I.Phone을 이용하여 특정 Triphone에 대한 Context 구축
+
+  
+
+  ``` 
+  ex1) id가 10인 triphone a/b/c가 있다면
+  ilabel_info의 11번째 항목(index alignment)은 'a' 'b' 'c'와 같은 C.I Phone이 들어있음
+  ```
+
+  
+
+  ```
+  ex2) 'sil' '<eps>'와 같은 phone은 kaldi에서 설명한 대로 빈 배열로 표시하며
+  	 - '#-1'과 같은 symbol은 '0'이 하나 들어간 배열로 표현
+  	 	(0번노드(시작노드)의 나가는 Arc에서 입력기호로 사용됨)
+  	 	
+  	 - '$'은 최종상태의 입력호에 대한 출력기호로 사용
+  ```
+
+- I/O
+
+  - input (C.D. Phone): <eps\>/sil/ey (중심단어 sil 왼쪽이 <eps\> 오른쪽이 ey)
+
+  - output(C.I. Phone): ey
+
+    출력기호는 입력기호에 비해 (N-P-1) 위치만큼 앞에 나타나게 됨 (결합의 용이성을 위해)
+
+    > 하지만, 이렇게 되면 Triphone에 (N-P-1) 또는 1이 있는 대부분의 Triphone에서 flush할 입력기호가 있을 때, 출력기호가 부족함
+    >
+    > **따라서, 발화의 끝 또는 막다른 길에서 '$' 기호를 사용해 줌**
+
+  - '$'는 C가 LG로 composition될때 소모되어야함
+
+    LG.fst의 출력층에 $:<eps\> self-loop를 추가하여 이를 소모
+
+![](./img/chanhyun4.png)
+
+
+
+
+
+#### CLG.fst
+
+> 병합 시 optim.을 위해 동일한 HMM모델 (같은 PDF id)에 해당하는 모든 Triphone을 임의로 선택도니 하나의 멤버의 Triphone id에 매핑하여 사용
+
+
+
+```
+ex1) 'sil'은 CI이고, 모두가 동일한 HMM모델로 구성되기에 Triphone context에서의 모든 'sil'이 하나의 'sil' triphone id에 매핑됨
+```
+
+
+
+```
+ex2) <eps>/ey/<eps>와 ey/ey/<eps>는 동일한 PDF_id (동일한 HMM 모델)을 사용하기에 같은 triphone id에 매핑함
+```
+
+
+
+
+
+![](./img/chanhyun5.png)
+
+
+
+
+
+#### H.fst
+
+> C.D. phones가 Transition-id에 매핑됨
+>
+> Transition-id는 CD Phone을 고유하게 식별하는데 사용되고,
+>
+> PDF_id는 CD Phone내의 노드 및 Arc를 식별함
+
+
+
+![](./img/chanhyun6.png)
+
+
+
+- Transition-id 표현 방법
+
+  ```
+  k_1_739_1
+  Transition_id는 State 1 (두번째 State)와 관련되어 있으며
+  PDF ID가 739인 음소 'K' (context에 따라 id는 달라질 수도 있음),
+  또한 현재 State (=1)에서 넘어가는 State가 1
+  즉, self-loop를 나타내는 Transition-id
+  ```
+
+  
