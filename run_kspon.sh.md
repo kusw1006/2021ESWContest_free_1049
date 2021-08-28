@@ -22,7 +22,7 @@
 #            2019  hwiorn <hwiorn@gmail.com>
 #
 # Apache 2.0
-#
+
 
 # Check list before start
 # 1. locale setup
