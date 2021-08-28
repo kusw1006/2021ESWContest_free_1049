@@ -172,7 +172,7 @@ K.  k ey #2		# 동음이의어
 
 - (step1) G.fst
 
-![](./img/chanhyun1.png)
+![](../../../img/chanhyun1.png)
 
 ​		- 노드 3 - 노드 1 이 0.69315인건, <s\>의 back off probability인 
 $$
@@ -221,8 +221,8 @@ make_lexicon_fst.pl 4가지의 파라미터를 받음
 ​	1. disambig symbol이 있는 사전 파일
 
 	2. optional silence(단어 사이의 묵음)의 확률 0.5
- 	3. silence phone을 나타내는데 사용하는 symbol
- 	4. slience를 표현하는 disambig symbol
+	3. silence phone을 나타내는데 사용하는 symbol
+	4. slience를 표현하는 disambig symbol
 
 
 
@@ -236,7 +236,7 @@ make_lexicon_fst.pl 4가지의 파라미터를 받음
 
 - L.fst
 
-![](./img/chanhyun2.png)
+![](../../../img/chanhyun2.png)
 
 
 
@@ -254,7 +254,7 @@ fsttablecompose L_disambig.fst G.fst |\
 
 - L*G composition (Mini, det.)
 
-![](./img/chanhyun3.png)
+![](../../../img/chanhyun3.png)
 
 > #0 자체 루프는 L과 G를 병합할 때, G에서의 Special symbol을 처리하기 위해 만들어 놓은 경로
 
@@ -305,7 +305,7 @@ fsttablecompose L_disambig.fst G.fst |\
 
     LG.fst의 출력층에 $:<eps\> self-loop를 추가하여 이를 소모
 
-![](./img/chanhyun4.png)
+![](../../../img/chanhyun4.png)
 
 
 
@@ -331,7 +331,7 @@ ex2) <eps>/ey/<eps>와 ey/ey/<eps>는 동일한 PDF_id (동일한 HMM 모델)을
 
 
 
-![](./img/chanhyun5.png)
+![](../../../img/chanhyun5.png)
 
 
 
@@ -347,7 +347,7 @@ ex2) <eps>/ey/<eps>와 ey/ey/<eps>는 동일한 PDF_id (동일한 HMM 모델)을
 
 
 
-![](./img/chanhyun6.png)
+![](../../../img/chanhyun6.png)
 
 
 

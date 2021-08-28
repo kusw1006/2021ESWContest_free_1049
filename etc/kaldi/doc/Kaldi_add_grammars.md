@@ -139,3 +139,4 @@ words.txt의 비단말 기호는 script 수준(L.fst 생성)에서만 작동하�
 ## G.fst
 
 https://kaldi-asr.org/doc/grammar.html
+
