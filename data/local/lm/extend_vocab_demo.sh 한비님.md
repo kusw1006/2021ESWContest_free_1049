@@ -213,11 +213,21 @@ data/dev_clean2/text 의 2~필드끝 까지의 $n에서 seen에 없는 단어가
 
 
 
-steps/dict/apply_g2p.sh : sequiter로 단어 -> lexicon
+steps/dict/apply_g2p.sh : sequitur로 단어 -> lexicon
 
 - word-list = $tree_dir/extvocab_nosp_lexicon/words
 - g2p-model-dir = $tree_dir/extvocab_nosp_g2p
 - output-dir = $tree_dir/extvocab_nosp_lexicon
 
 
+
+data/lang_nosp_extvocab/G.fst 있으면 지움
+
+
+
+utils/lang/extend_lang.sh : (lexicon에 있는 음소로 이루어진) 단어 추가
+
+- old-lang-dir = data/lang_nosp_basevocab
+- lexicon = $tree_dir/extvocab_nosp_lexicon/lexiconp.txt
+- new-lang-dir = data/lang_nosp_extvocab
 
