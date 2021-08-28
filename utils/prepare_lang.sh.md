@@ -1,5 +1,14 @@
+# Prepare_lang.sh 분석
+
+> 작성자: 이찬현
+>
+> 작성일시: 21.08.28 21:27
+
+
+
+## License
+
 ```shell
-#!/usr/bin/env bash
 # Copyright 2012-2013  Johns Hopkins University (Author: Daniel Povey);
 #                      Arnab Ghoshal
 #                2014  Guoguo Chen
@@ -19,35 +28,38 @@
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License.
 
-# This script prepares a directory such as data/lang/, in the standard format,
-# given a source directory containing a dictionary lexicon.txt in a form like:
-# word phone1 phone2 ... phoneN
-# per line (alternate prons would be separate lines), or a dictionary with probabilities
-# called lexiconp.txt in a form:
-# word pron-prob phone1 phone2 ... phoneN
-# (with 0.0 < pron-prob <= 1.0); note: if lexiconp.txt exists, we use it even if
-# lexicon.txt exists.
-# and also files silence_phones.txt, nonsilence_phones.txt, optional_silence.txt
-# and extra_questions.txt
-# Here, silence_phones.txt and nonsilence_phones.txt are lists of silence and
-# non-silence phones respectively (where silence includes various kinds of
-# noise, laugh, cough, filled pauses etc., and nonsilence phones includes the
-# "real" phones.)
-# In each line of those files is a list of phones, and the phones on each line
-# are assumed to correspond to the same "base phone", i.e. they will be
-# different stress or tone variations of the same basic phone.
-# The file "optional_silence.txt" contains just a single phone (typically SIL)
-# which is used for optional silence in the lexicon.
-# extra_questions.txt might be empty; typically will consist of lists of phones,
-# all members of each list with the same stress or tone; and also possibly a
-# list for the silence phones.  This will augment the automatically generated
-# questions (note: the automatically generated ones will treat all the
-# stress/tone versions of a phone the same, so will not "get to ask" about
-# stress or tone).
-#
-
 # This script adds word-position-dependent phones and constructs a host of other
 # derived files, that go in data/lang/.
+```
+
+
+
+## 요약
+
+```
+이 스크립트는 다음과 같은 형식의 사전 lexicon.txt를 포함하는 소스 디렉토리가 주어지면 data/lang/과 같은 디렉토리를 표준 형식으로 준비합니다. 
+
+또는 다음 형식의 lexiconp.txt라는 확률을 가진 사전: word pron-prob phone1 phone2 ... phoneN (0.0 < pron-prob <= 1.0); 
+참고: lexiconp.txt가 있으면 lexicon.txt가 있어도 사용합니다.
+
+그리고 또한 파일 silence_phones.txt, nonsilence_phones.txt, optional_silence.txt 및 extra_questions.txt 여기에서 silent_phone.txt 및 nonsilence_phone.txt는 각각 무음 및 무음이 아닌 전화의 목록입니다
+(여기서 무음에는 다양한 종류의 소음, 웃음, 기침, 채워진 일시 정지 등이며 무음 전화에는 "실제" 전화가 포함됩니다.)
+
+해당 파일의 각 줄에는 음소 목록이 있으며 각 줄의 전화는 동일한 "기본 음소"에 해당하는 것으로 가정합니다.
+(즉, 동일한 기본 음소의 다른 스트레스 또는 톤 변형.)
+
+"optional_silence.txt" 파일에는 사전에서 선택적 묵음에 사용되는 단일 Phone(일반적으로 SIL)만 포함되어 있습니다. 
+
+extra_questions.txt가 비어 있을 수 있습니다.
+일반적으로 Phone list으로 구성되며 각 목록의 모든 구성원은 동일한 강세 또는 어조로 구성됩니다.
+Silence Phone list도 가능합니다. 이렇게 하면 자동으로 생성된 질문이 추가됩니다
+(참고: 자동으로 생성된 질문은 전화기의 모든 강세/어조 버전을 동일하게 취급하므로 강세 또는 어조에 대해 "묻지 않음").
+```
+
+
+
+```shell
+#!/usr/bin/env bash
 
 # Begin configuration section.
 num_sil_states=5
@@ -268,19 +280,31 @@ if $position_dependent_phones; then
   done
 fi
 
-# add_lex_disambig.pl is responsible for adding disambiguation symbols to
-# the lexicon, for telling us how many disambiguation symbols it used,
-# and also for modifying the unknown-word's pronunciation (if the
-# --unk-fst was provided) to the sequence "#1 #2 #3", and reserving those
-# disambig symbols for that purpose.
-# The #2 will later be replaced with the actual unk model.  The reason
-# for the #1 and the #3 is for disambiguation and also to keep the
-# FST compact.  If we didn't have the #1, we might have a different copy of
-# the unk-model FST, or at least some of its arcs, for each start-state from
-# which an <unk> transition comes (instead of per end-state, which is more compact);
-# and adding the #3 prevents us from potentially having 2 copies of the unk-model
-# FST due to the optional-silence [the last phone of any word gets 2 arcs].
-if [ ! -z "$unk_fst" ]; then  # if the --unk-fst option was provided...
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+```
+add_lex_disambig.pl은 사전에 명확화 기호를 추가하고, 얼마나 많은 명확화 기호를 사용했는지 알려주고, 알려지지 않은 단어의 발음(--unk-fst가 제공된 경우)을 시퀀스 "#1 #으로 수정하는 역할을 합니다. 2 #3", 그리고 그 목적을 위해 모호하지 않은 기호를 예약합니다. #2는 나중에 실제 unk 모델로 교체됩니다. #1과 #3의 이유는 명확성과 FST를 간결하게 유지하기 위함입니다.
+
+#1이 없으면 <unknown> 전환이 발생하는 각 시작 상태에 대해 unk-model FST의 다른 복사본 또는 최소한 일부 호가 있을 수 있습니다(끝마다 대신 더 컴팩트한 상태); 그리고 #3을 추가하면 선택적 침묵[모든 단어의 마지막 전화는 2개의 호를 얻음]으로 인해 잠재적으로 unk-model FST의 2개 사본을 갖는 것을 방지할 수 있습니다.
+만약 [ ! -z "$unk_fst" ]; then # --unk-fst 옵션이 제공된 경우...
+```
+
+
+
+```shell
+
   if "$silprob"; then
     utils/lang/internal/modify_unk_pron.py $tmpdir/lexiconp_silprob.txt "$oov_word" || exit 1
   else
@@ -566,5 +590,5 @@ echo "$(basename $0): validating output directory"
 ! utils/validate_lang.pl $dir && echo "$(basename $0): error validating output" &&  exit 1;
 
 exit 0;
-
 ```
+
