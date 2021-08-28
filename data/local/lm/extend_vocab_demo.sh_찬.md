@@ -5,7 +5,7 @@
 
 이것은 명령줄 도구를 사용하여 일반 FST로 확장합니다(--write-as-grammar=false).
 
-실제로 결과가 클 수 있고 전체를 작성하는 데 너무 많은 시간이 걸릴 수 있기 때문에 그렇게 하고 싶지 않을 수 있습니다. 시각. 코드 자체를 사용하면 이러한 GrammarFst 개체를 가벼운 방식으로 구성하고 이를 사용하여 디코딩할 수 있습니다.
+실제로 결과가 클 수 있고 전체를 작성하는 데 너무 많은 시간이 걸릴 수 있기 때문에 그렇게 하고 싶지 않을 수 있습니다. 코드 자체를 사용하면 이러한 GrammarFst 개체를 가벼운 방식으로 구성하고 이를 사용하여 디코딩할 수 있습니다.
 ```
 
 
@@ -29,7 +29,8 @@ lang_ext=data/lang_nosp_extvocab
 왜냐하면 그래프 수준에서 테스트하기 때문입니다.
 다시말해 컴파일된 HCLG 그래프의 동등성을 테스트하기 때문이며, 여기에는 디코딩이 포함되지 않습니다
 
-silprobs를 지원하는 스크립트를 작성해야 하기 때문에 지금은 "no-silprobs" 사전 dir로 이 작업을 수행하고 있습니다.
+silprobs를 지원하는 스크립트를 작성해야 하기 때문에 지금은 "no-silprobs" 사전 dir로 이 작업을 수행하고 있습니다.	***** silprob이 있는 버전도 있으니 그거 쓰면 됨
+
 참고로 베이스라인에 대한 'lang' 디렉토리를 만드는 방법은 다음과 같습니다.
 #utils/prepare_lang.sh data/local/dict_nosp \"<UNK>" data/local/lang_tmp_nosp data/lang_nosp
 ```
@@ -346,7 +347,7 @@ offset과 nonterm_unk에 각각 $lang_ext/phones.txt 에서 nonterm_bos와 nonte
 이제 실제로 테스트 데이터를 디코딩합니다.
 참고로 현재(작성 당시) 체인 TDNN 시스템 local/chain/run_tdnn.sh에서 테스트 데이터를 디코딩하는 데 사용된 명령(그 단계에서 실행하여 알아낸 대로)은 다음과 같습니다. 
 
-steps/nnet3 /decode.sh --acwt 1.0 --post-decode-acwt 10.0 --frames-per-chunk 140\
+steps/nnet3/decode.sh --acwt 1.0 --post-decode-acwt 10.0 --frames-per-chunk 140\
 	--nj 38 --cmd "queue.pl --mem 4G --num-threads 4" --online -ivector-dir \
     exp/nnet3/ivectors_dev_clean_2_hires \ exp/chain/tree_sp/graph_tgsmall \
     data/dev_clean_2_hires exp/chain/tdnn1h_sp/decode_tgsmall_dev_clean_2

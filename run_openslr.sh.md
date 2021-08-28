@@ -1,4 +1,4 @@
-```
+```shell
 #!/bin/bash
 #
 # Based mostly on the WSJ/Librispeech recipe. The training database is #####,
