@@ -85,6 +85,8 @@ sw02001-B sw02001 B
 sw02005-A sw02005 A
 ```
 
+
+
 ---
 
 > 자동 제작
@@ -142,6 +144,8 @@ steps/compute_cmvn_stats.sh data/train exp/make_mfcc/train $mfccdir
 ```
 
 ----
+
+
 
 ## data/lang
 

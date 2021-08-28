@@ -23,7 +23,6 @@
 #
 # Apache 2.0
 
-
 # Check list before start
 # 1. locale setup
 # 2. pre-installed package: awscli, flac, sox, same cuda library, unzip
