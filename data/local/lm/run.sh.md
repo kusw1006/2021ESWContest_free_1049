@@ -252,6 +252,8 @@ fi
 
 - Pruning uniqWordList
 
+  > 가지치기 단계. med와 small model 생성 (3-gram에 대해서만 제작, 4-gram은 그냥 large 사용)
+
 ```sh
 echo "Pruning uniqWordList for Morfessor training ------------------------------------"
 coverage=0.98

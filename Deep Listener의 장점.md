@@ -6,3 +6,4 @@
 
 [새 모델 제작 또는 글쓸떄 이거 참고하면 될듯](https://www.jask.or.kr/articles/xml/v9ka/)
 
+한국어 모델이라는 장점
