@@ -180,6 +180,7 @@ steps/train_sat.sh  --cmd "$train_cmd" 4200 40000 \
 # decode using the tri4b model with pronunciation and silence probabilities
 utils/mkgraph.sh \
   data/lang_test_tgsmall exp/tri4b exp/tri4b/graph_tgsmall
+  # <lang model> <acoustic model> <graph dir>
 
 # the size is properly set?
 utils/subset_data_dir.sh data/test_clean 200 data/test_200
@@ -196,7 +197,7 @@ for test in test_200; do
     data/$test exp/tri4b/decode_{tgsmall,tglarge}_$test
   steps/lmrescore_const_arpa.sh \
     --cmd "$decode_cmd" data/lang_test_{tgsmall,fglarge} \
-    data/$test exp/tri4b/decode_{tgsmall,fglarge}_$test
+    data/$test exp/tri4b/decode_{,fglarge}_$test
 done
 
 # align train_clean_100 using the tri4b model

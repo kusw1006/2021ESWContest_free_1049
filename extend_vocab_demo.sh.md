@@ -1,3 +1,12 @@
+## 요약
+
+- Stage 2: top HCLG.fst 제작
+- Stage 3-4: new lexiconp.txt 파일을 제작하여 기존 L.fst파일과 new lexiconp.txt 파일을 가지고 extend_lang.sh을 통해 하나의 L.fst로 통합
+- Stage5: new G.fst 제작
+- Stage6: new HCLG.fst 제작
+
+
+
 ```
 이 스크립트는 문법 디코딩 프레임워크를 사용하여 둘 이상의 부분으로 구성된 그래프를 작성하는 방법을 보여줍니다.
 
@@ -113,7 +122,7 @@ cp -r ~/esw2021/test/models/korean/zeroth $tree_dir/extvocab_nosp_top
 utils/mkgraph.sh --self-loop-scale 1.0 $lang_base $tree_dir $tree_dir/extvocab_nosp_top
 ```
 
-utils/mkgraph.sh (Create HCLG decoding grph)
+utils/mkgraph.sh (Create HCLG decoding graph)
 
 - lang-dir : $lang_base
 - model-dir : $tree_dir
@@ -397,14 +406,17 @@ steps/nnet3/decode_grammar.sh --acwt 1.0 --post-decode-acwt 10.0 --frames-per-ch
 >
 > 설치 및 env.sh에 환경변수 등록이 제대로 수행되지 않아
 >
-> **$KALDI_ROOT/tools/extra/install_sequitur.sh** 과 **steps/dict/train_g2p.sh 파일 수정**
+> **$KALDI_ROOT/tools/extra/install_sequitur.sh** 과 **steps/dict/train_g2p.sh 파일 수정
 
-```sh
+
+
+> version 2: g2p가 의미없는걸 깨달음
+
+```shell
 #!/usr/bin/env bash
 
-
-stage=0
-run_g2p=true  
+stage=3
+run_g2p=false
 set -e
 
 . ./path.sh
@@ -437,11 +449,11 @@ fi
 
 
 if [ $stage -le 2 ]; then
-
-  # Top HCLG Graph를 만들어 주는 부분을 기존에 학습시키며 제작한 (~/esw2021/test/models/korean/zeroth) Graph와 파일들을 사용하는것으로 코드 변경
+  # make the top-level part of the graph.
   #utils/mkgraph.sh --self-loop-scale 1.0 $lang_base $tree_dir $tree_dir/extvocab_nosp_top
   mkdir -p $tree_dir/extvocab_nosp_top
-  cp -r /home/dcl2003/esw2021/test/models/korean/zeroth $tree_dir/extvocab_nosp_top
+  # 우리가 만들어놓은 기존 HCLG.fst를 가져오는 과정
+  cp -r /home/dcl2003/esw2021/test/models/korean/zeroth/HCLG.fst $tree_dir/extvocab_nosp_top
 fi
   
 
@@ -456,7 +468,7 @@ if [ $stage -le 4 ]; then
   mkdir -p $tree_dir/extvocab_nosp_lexicon
 
   awk -v w=data/lang/words.txt 'BEGIN{while(getline <w) seen[$1] = $1} {for(n=2;n<=NF;n++) if(!($n in seen)) oov[$n] = 1}
-                                END{ for(k in oov) print k;}' < data/dev_clean_2/text > $tree_dir/extvocab_nosp_lexicon/words
+                                END{ for(k in oov) print k;}' < data/train_30k_hires/text > $tree_dir/extvocab_nosp_lexicon/words
   echo "$0: generating g2p entries for $(wc -l <$tree_dir/extvocab_nosp_lexicon/words) words"
 
   if $run_g2p; then
@@ -473,34 +485,19 @@ VINOS	0.068431	V IY1 N OW0 S
 DOMA	0.645714	D OW1 M AH0
 DOMA	0.118255	D UW1 M AH0
 DOMA	0.080682	D OW0 M AH0
-IMPARA	0.906222	IH0 M P AA1 R AH0
-VERLOC'S	0.564847	V ER0 L AA1 K S
-VERLOC'S	0.173540	V ER1 L AH0 K S
-VERLOC'S	0.050543	V ER1 L AA1 K S
-UNTRUSSING	0.998019	AH0 N T R AH1 S IH0 NG
-DARFHULVA	0.317057	D AA2 F UH1 L V AH0
-DARFHULVA	0.262882	D AA2 F HH UH1 L V AH0
-DARFHULVA	0.064055	D AA2 F HH UW1 L V AH0
-FINNACTA	0.594586	F IH1 N AH0 K T AH0
-FINNACTA	0.232454	F IH1 N AE1 K T AH0
-FINNACTA	0.044733	F IH1 N IH0 K T AH0
-YOKUL	0.845279	Y OW1 K AH0 L
-YOKUL	0.051082	Y OW2 K AH0 L
-YOKUL	0.029435	Y OW0 K AH0 L
-CONGAL	0.504228	K AA1 NG G AH0 L
-CONGAL	0.151648	K AA2 NG G AH0 L
-CONGAL	0.137837	K AH0 N JH AH0 L
-DELECTASTI	0.632180	D IH0 L EH0 K T EY1 S T IY0
-DELECTASTI	0.203808	D IH0 L EH1 K T EY1 S T IY0
-DELECTASTI	0.066722	D IH0 L EH0 K T AE1 S T IY0
-YUNDT	0.975077	Y AH1 N T
-# 이부분은 사용하지 않고 그냥 g2p 학습 시키기로 결정
+GWYNPLAINE'S	0.983053	G W IH1 N P L EY1 N Z
+SHIMERDA	0.610922	SH IH0 M EH1 R D AH0
+SHIMERDA	0.175678	SH IY0 M EH1 R D AH0
+SHIMERDA	0.069785	SH AY1 M ER1 D AH0
 EOF
   fi
 
   # extend_lang.sh needs it to have basename 'lexiconp.txt'.
   mv $tree_dir/extvocab_nosp_lexicon/lexicon.lex $tree_dir/extvocab_nosp_lexicon/lexiconp.txt
 
+
+
+  # 기존의 L.fst와 새로운 lexiconp를 가지고 extend_lang.sh 를 통해 새로운 L.fst 제작
   [ -f data/lang_nosp_extvocab/G.fst ] && rm data/lang_nosp_extvocab/G.fst
   utils/lang/extend_lang.sh  data/lang_nosp_basevocab $tree_dir/extvocab_nosp_lexicon/lexiconp.txt  data/lang_nosp_extvocab
 fi
@@ -522,7 +519,10 @@ EOF
 fi
 
 if [ $stage -le 6 ]; then
-  utils/mkgraph.sh --self-loop-scale 1.0 $lang_ext $tree_dir $tree_dir/extvocab_nosp_part
+
+  # tree_dir로 되어있는 부분을 우리가 기존에 가지고있는 AM 위치로 엮어줘야함 (exp/tri4b)
+  # utils/mkgraph.sh --self-loop-scale 1.0 $lang_ext $tree_dir $tree_dir/extvocab_nosp_part
+  utils/mkgraph.sh --self-loop-scale 1.0 $lang_ext exp/tri4b $tree_dir/extvocab_nosp_part
 fi
 
 if [ $stage -le 7 ]; then

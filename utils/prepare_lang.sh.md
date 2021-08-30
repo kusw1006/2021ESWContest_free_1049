@@ -278,25 +278,31 @@ else
 fi
 
 
+
 # Sets of phones for use in clustering, and making monophone systems.
 
+# 모든 silence phone이 동일한 pdf를 공유하도록 하는 root file 작성
+# [세 가지 별개의 상태가 transitions만 다를 것이다]
 
+# 공유/비공유의 의미는 동일한 tree-root에 있는 3개의 HMM states를 공유한다는 것인가?
+# models(phones)에서의 공유는 여러 phone을 한 줄의 root.txt에 작성하여 이루어 진다.
+# (공유 / 비공유는 이것에 영향을 미치지 않음)
+
+# not-shared, not-split의 의미는 3가지 state에 대해 별도의 tree-root가 있음을 의미하지만,
+# tree를 분할하지 않아, stumps(그루터기)를 유지하므로
+# 라인의 모든 phone이 동일한 model에 해당한다.
 if $share_silence_phones; then
-  # build a roots file that will force all the silence phones to share the
-  # same pdf's. [three distinct states, only the transitions will differ.]
-  # 'shared'/'not-shared' means, do we share the 3 states of the HMM
-  # in the same tree-root?
-  # Sharing across models(phones) is achieved by writing several phones
-  # into one line of roots.txt (shared/not-shared doesn't affect this).
-  # 'not-shared not-split' means we have separate tree roots for the 3 states,
-  # but we never split the tree so they remain stumps,
-  # so all phones in the line correspond to the same model.
 
   cat $srcdir/silence_phones.txt | awk '{printf("%s ", $0); } END{printf("\n");}' | cat - $srcdir/nonsilence_phones.txt | \
     utils/apply_map.pl $tmpdir/phone_map.txt > $dir/phones/sets.txt
   cat $dir/phones/sets.txt | \
     awk '{if(NR==1) print "not-shared", "not-split", $0; else print "shared", "split", $0;}' > $dir/phones/roots.txt
 else
+
+다른 무음 전화에는 다른 GMM이 있습니다. [참고: 여기에서 모든 "공유 분할"은 모든 주에 대해 하나의 GMM이 있거나 주별로 분할할 수 있음을 의미합니다. 컨텍스트 독립적인 전화기이기 때문에 컨텍스트를 볼 수 없습니다.]
+  # 서로 다른 silence phone은 서로 다른 GMMㅇ르 가진다.
+  # (참고로, 여기에서의 모든 shared split )
+  
   # different silence phones will have different GMMs.  [note: here, all "shared split" means
   # is that we may have one GMM for all the states, or we can split on states.  because they're
   # context-independent phones, they don't see the context.]
