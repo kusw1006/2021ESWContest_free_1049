@@ -18,6 +18,14 @@
 >
 > 4. 이후 /opt에서 ```sudo sh kusw_start.sh 실행``` 및 ``` sudo python /tmp/client.py .... 입력```
 
+
+
+> - MKL_CXXFLAGS, MKL_LDLIBS 변수 수정
+>
+>   - MKL_LDLIBS에서
+>
+>     libmkl_intel_lp64 -libmkl_core을 지우고 libmkl_rt.so로 교체함
+
 ```makefile
 # This file was generated using the following command:
 # ./configure --shared --mkl-root=/opt/intel/mkl --mkl-libdir=/opt/intel/mkl/lib/intel64
@@ -133,3 +141,10 @@ CUDA_LDLIBS += -lcusolver
 
 ```
 
+
+
+## 참고
+
+[질문](https://github.com/pykaldi/pykaldi/issues/143)
+
+[질문에 대한 링크](https://groups.google.com/g/kaldi-help/c/m3nyQke0HS0/m/4fj8gkSWAgAJ)

@@ -6,6 +6,20 @@
 
 
 
+
+
+> 아래 코드 실행 후 install_mkl 해줘야 오류없이 설치 됨 (GPG key)
+
+``` shell
+wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
+apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
+sh -c 'echo deb https://apt.repos.intel.com/mkl all main > /etc/apt/sources.list.d/intel-mkl.list'
+apt-get update
+apt-get install -f --allow-downgrades --allow-remove-essential --allow-change-held-packages -y intel-mkl-64bit-2019.1-053
+```
+
+
+
 ```shell
 #!/usr/bin/env bash
 
