@@ -36,6 +36,8 @@
 
 ## 요약
 
+>prepare_dict를 통해 생성된 lexicon, lexiconp, silence, nonsilence, optional_silence, extra_questions를 이용하여 L.fst와 Lexicon fst를 만들기우해 필요한 파일 생성 ``` L.fst, L_disambig.fst, oov.txt, phone dir / phones.txt words.txt topo, ngram-count```
+
 ```
 이 스크립트는 다음과 같은 형식의 사전 lexicon.txt를 포함하는 소스 디렉토리가 주어지면 data/lang/과 같은 디렉토리를 표준 형식으로 준비합니다. 
 
@@ -492,6 +494,7 @@ cat $tmpdir/align_lexicon.txt | \
 ### nonterminal 처리
 
 ```shell
+# 아마 nonterminals.txt에는 nonterm 심볼이 들어가있을거임
 if [ -f $srcdir/nonterminals.txt ]; then
   utils/lang/grammar/augment_phones_txt.py $dir/phones.txt $srcdir/nonterminals.txt $dir/phones.txt
   utils/lang/grammar/augment_words_txt.py $dir/words.txt $srcdir/nonterminals.txt $dir/words.txt

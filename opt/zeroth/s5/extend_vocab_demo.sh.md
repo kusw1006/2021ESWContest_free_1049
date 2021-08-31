@@ -1,8 +1,19 @@
 ## 요약
 
+- Stage 0: Prepare_lang을 통해 기존에 있던 dict파일들로 L.fst를 만들기위해 필요한 파일들 구성
+
+  > **prepare_dict**: Lexicon, Lexiconp, silence, nonsilence, optional_silence, extra_questions
+  >
+  > **prepare_lang**: L.fst, L_disambig.fst, oov.txt, phone dir/ phones.txt, words.txt, topo, ngram-count
+
+- Stage 1: G.fst를 제작하는데, 이때 arpa file에서 <UNK\>를 '#nonterm:unk'로 변경해 주고 G.fst로 컴파일
+
 - Stage 2: top HCLG.fst 제작
+
 - Stage 3-4: new lexiconp.txt 파일을 제작하여 기존 L.fst파일과 new lexiconp.txt 파일을 가지고 extend_lang.sh을 통해 하나의 L.fst로 통합
+
 - Stage5: new G.fst 제작
+
 - Stage6: new HCLG.fst 제작
 
 
@@ -60,7 +71,7 @@ utils/prepare_lang.sh data/local/dict_nosp_basevocab \
 
 2. #nonterm:unk를 data/local/dict_nosp_basevocab/nonterminals.txt에 넣음
 
-3. Prepare_lang.sh 사용
+3. Prepare_lang.sh 사용 (원본 Lexicon에 nonterminal 추가)
 
    - dict-src-dir = data/local/dict_nosp_basevocab 
 
