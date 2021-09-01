@@ -2,7 +2,7 @@
 
 - Stage 0: Prepare_lang을 통해 기존에 있던 dict파일들로 L.fst를 만들기위해 필요한 파일들 구성
 
-  > **prepare_dict**: Lexicon, Lexiconp, silence, nonsilence, optional_silence, extra_questions
+  > **prepare_dict**: Lexicon, silence, nonsilence, optional_silence, extra_questions
   >
   > **prepare_lang**: L.fst, L_disambig.fst, oov.txt, phone dir/ phones.txt, words.txt, topo, ngram-count
 
