@@ -4,8 +4,7 @@
 
   ```shell
   echo "$0: generating phone call noise"
-  sed -i '2~2 s\$\sox -t wav - -r 8k -t wav - | sox -t wav - -r 16k -t wav - | sox -t wav - -t wav - highpass 100 | sox -t wav - -t wav - lowpass 1000 | sox -t wav - -t wav - dither -s |\g' data/${trainset}/wav.scp
-  sed -i '2~8 s\$\sox -t wav - -t wav - gain 16 |\g' data/${trainset}/wav.scp
+  sed -i '2~2 s\$\sox -t wav - -t wav - highpass 100 | sox -t wav - -t wav - lowpass 1000 | sox -t wav - -t wav - dither -s |\g' data/${trainset}/wav.scp
   ```
 
 

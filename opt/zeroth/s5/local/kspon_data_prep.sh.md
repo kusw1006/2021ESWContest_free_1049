@@ -1,6 +1,8 @@
 ## kspon_data_prep.sh
 
 > AI-Hub kspon speech related scripts
+>
+> 106번째 줄 수정: 이찬현
 
 
 
@@ -9,6 +11,7 @@
 ```sh
 #!/bin/bash
 # Copyright 2019   hwiorn <hwiorn@gmail.com>
+# Modified by Chanhyun Lee (Konkuk Univ.)
 # Apache 2.0.
 
 nj=8
@@ -112,7 +115,8 @@ for info in ${files_info[@]}; do
          $F[2] =~ s:[\s\.]+$::g; # trim right
          $F[2] =~ s: +: :g; # remove multi-spaces
          print "$F[0] $F[2]\n";' $info >>$dst/text.tmp || exit 1
-    awk -F'\t' '{print $1 " sox -t raw -r 16k -b 16 -e signed-integer -L \"" $2 "\" -t wav - | "}' $info >>$dst/wav.scp.tmp || exit 1
+    #@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    awk -F'\t' '{print $1 " sox -t raw -r 8k -b 16 -e signed-integer -L \"" $2 "\" -t wav - | sox - -r 16k - |"}' $info >>$dst/wav.scp.tmp || exit 1
     cut -f4- $info | perl -lane 'next if(/^$/); print "$1\t$2" if(/\(\s*(.+?)\s*\)\/\(\s*(.+?)\s*\)/)' >>$dst/pronoun.dict.tmp || exit 1
 done
 echo
@@ -138,5 +142,6 @@ utils/validate_data_dir.sh --no-feats $dst || exit 1;
 
 echo $0: done
 exit 0
+
 ```
 

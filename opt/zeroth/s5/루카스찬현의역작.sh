@@ -79,16 +79,6 @@ SHIMERDA	0.069785	SH AY1 M ER1 D AH0
 EOF
   fi
 
-  if [[ ! -f $srcdir/lexiconp.txt ]]; then
-  echo "**Creating $srcdir/lexiconp.txt from $srcdir/lexicon.txt"
-  perl -ape 's/(\S+\s+)(.+)/${1}1.0\t$2/;' < $srcdir/lexicon.txt > $srcdir/lexiconp.txt || exit 1;
-fiif [[ ! -f $srcdir/lexiconp.txt ]]; then
-  echo "**Creating $srcdir/lexiconp.txt from $srcdir/lexicon.txt"
-  perl -ape 's/(\S+\s+)(.+)/${1}1.0\t$2/;' < $srcdir/lexicon.txt > $srcdir/lexiconp.txt || exit 1;
-fiif [[ ! -f $srcdir/lexiconp.txt ]]; then
-  echo "**Creating $srcdir/lexiconp.txt from $srcdir/lexicon.txt"
-  perl -ape 's/(\S+\s+)(.+)/${1}1.0\t$2/;' < $srcdir/lexicon.txt > $srcdir/lexiconp.txt || exit 1;
-fi
 
 # 위의 코드 실행해봐
 
