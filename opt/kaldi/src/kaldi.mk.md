@@ -16,9 +16,9 @@
 >
 > 3. /opt/kaldi/src에서 
 >
->    ```sudo make depend && sudo make -j 16``` 이전에 아래의 코드 복붙
->
-> 4. 이후 /opt에서 ```sudo sh kusw_start.sh 실행``` 및 ``` sudo python /tmp/client.py .... 입력```
+>    ```sudo make depend j 16``` 이후에 아래의 코드 복붙
+> 4. ```sudo make -j 16``` 실행
+> 5. 이후 /opt에서 ```sudo sh kusw_start.sh 실행``` 및 ``` sudo python /tmp/client.py .... 입력```
 
 
 
