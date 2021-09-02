@@ -148,7 +148,7 @@ fi
 - lexicon종류가 lexiconp_silprob.txt라면
   - $silprob_file이 0이라면 
     - 제공되지 않음, 기존 lang dir 확인
-    - $srcdir/silprob.txt가 있다면 silprob_filefh tkdyd
+    - $srcdir/silprob.txt가 있다면 silprob_filefh 사용
     - $srcdir/silprob.txt가 없다면 종료
   - $silprob_file이 0이 아니지만 정규파일이 아니라면 -> 종료
 - lexicon종류가 lexiconp.txt가 아니라면
@@ -189,7 +189,7 @@ echo "$0: added $(wc -l <$tmpdir/extra_words.txt) extra words to words.txt"
 
 
 
-5. skip
+5. nonterminals.txt가 있는 경우
 
 ```sh
 if [ -f $dir/phones/nonterminals.txt ]; then
@@ -199,6 +199,8 @@ else
   grammar_opts=""
 fi
 ```
+
+- grammar_opts에 left-context-phones, nonterminals 옵션 추가
 
 <br>
 

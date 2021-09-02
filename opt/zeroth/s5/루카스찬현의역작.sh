@@ -11,7 +11,7 @@ set -e
 . ./path.sh
 . utils/parse_options.sh
 
-tree_dir=exp/chain/tree_sp  # AM model이 있는 경로
+tree_dir=exp/chain_rvb/tree_a  # AM model이 있는 경로
 lang_base=data/lang_nosp_basevocab
 lang_ext=data/lang_nosp_extvocab
 
@@ -49,38 +49,25 @@ fi
 
 if [ $stage -le 3 ]; then
 
-  # AM 모델이 있는 폴더에 ./extvocab_nosp_lexicon 폴더 생성
-  mkdir -p $tree_dir/extvocab_nosp_lexicon
+  # # AM 모델이 있는 폴더에 ./extvocab_nosp_lexicon 폴더 생성
+  # mkdir -p $tree_dir/extvocab_nosp_lexicon
 
   # 기존 words.txt에 없는 단어를 추출하여
   # $tree_dir/extvocab_nosp_lexicon/words에 저장
   awk -v w=data/lang/words.txt 'BEGIN{while(getline <w) seen[$1] = $1} {for(n=2;n<=NF;n++) if(!($n in seen)) oov[$n] = 1}
                                 END{ for(k in oov) print k;}' < data/train_30k_hires/text > $tree_dir/extvocab_nosp_lexicon/words
-  echo "$0: generating g2p entries for $(wc -l <$tree_dir/extvocab_nosp_lexicon/words) words"
 
   if $run_g2p; then
+    echo "$0: generating g2p entries for $(wc -l <$tree_dir/extvocab_nosp_lexicon/words) words"
     steps/dict/apply_g2p.sh $tree_dir/extvocab_nosp_lexicon/words $tree_dir/extvocab_nosp_g2p  $tree_dir/extvocab_nosp_lexicon
   else
-    cat <<EOF >$tree_dir/extvocab_nosp_lexicon/lexicon.lex
-HARDWIGG	0.962436	HH AA1 R D W IH1 G
-SUDVESTR	0.162048	S AH1 D V EY1 S T R
-SUDVESTR	0.133349	S AH1 D V EH1 S T R
-SUDVESTR	0.114376	S AH1 D V EH1 S T ER0
-VINOS	0.558345	V IY1 N OW0 Z
-VINOS	0.068883	V AY1 N OW0 Z
-VINOS	0.068431	V IY1 N OW0 S
-DOMA	0.645714	D OW1 M AH0
-DOMA	0.118255	D UW1 M AH0
-DOMA	0.080682	D OW0 M AH0
-GWYNPLAINE'S	0.983053	G W IH1 N P L EY1 N Z
-SHIMERDA	0.610922	SH IH0 M EH1 R D AH0
-SHIMERDA	0.175678	SH IY0 M EH1 R D AH0
-SHIMERDA	0.069785	SH AY1 M ER1 D AH0
-EOF
+    utils/prepare_lang.sh data/local/dict_nosp "<UNK>" data/local/lang_tmp_nosp data/lang_nosp
+
   fi
 
 
 # 위의 코드 실행해봐
+###################@@@@@@ exp/chain_rvb가 최종적인 AM exp/chain_rvb/tree_a
 
   # extend_lang.sh needs it to have basename 'lexiconp.txt'.
   mv $tree_dir/extvocab_nosp_lexicon/lexicon.lex $tree_dir/extvocab_nosp_lexicon/lexiconp.txt
