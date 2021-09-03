@@ -422,6 +422,8 @@ steps/nnet3/decode_grammar.sh --acwt 1.0 --post-decode-acwt 10.0 --frames-per-ch
 
 
 > version 2: g2p가 의미없는걸 깨달음
+>
+> **9/3 kusw_extend_vocab_demo.sh 로 새롭게 제작함**
 
 ```shell
 #!/usr/bin/env bash
