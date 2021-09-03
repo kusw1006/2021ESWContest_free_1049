@@ -10,7 +10,9 @@
 
 > 60번째 줄에 있는 wav.scp 형성 형식에서
 >
-> 8k downsampling 후 16k upsampling을 진행할 수 있도록 함
+> 8k downsampling 후 16k upsampling을 진행할 수 있도록 했으나, 오류로 인해 폐기
+>
+> **local/download_from_openslr.sh**을 수정하는것으로 대체
 
 ```shell
 #!/bin/bash
@@ -72,9 +74,8 @@ for scriptid_dir in $(find -L $src -mindepth 1 -maxdepth 1 -type d | sort); do
 	
 	echo "  "$scriptid $reader $reader_gender
 
-	# @@@@@@@@@@@@@@@@@@@@@@@@@@이부분
     find -L $reader_dir/ -iname "*.flac" | sort | xargs -I% basename % .flac | \
-		awk -v "dir=$reader_dir" '{printf "%s flac -c -d -s %s/%s.flac | sox - -r 8k - | sox - -r 16k - |\n", $0, dir, $0}' >>$wav_scp|| exit 1
+		awk -v "dir=$reader_dir" '{printf "%s flac -c -d -s %s/%s.flac |\n", $0, dir, $0}' >>$wav_scp|| exit 1
     
 	reader_trans=$reader_dir/${reader}_${scriptid}.trans.txt
     [ ! -f  $reader_trans ] && echo "$0: expected file $reader_trans to exist" && exit 1
@@ -113,6 +114,8 @@ nutt2spk=$(wc -l <$utt2spk)
   echo "Inconsistent #transcripts($ntrans) and #utt2spk($nutt2spk)" && exit 1;
 
 utils/data/get_utt2dur.sh $dst 1>&2 || exit 1
+
+#sed -i 's\$\ sox -t flac - -r 8k -t flac - | sox -t flac - -r 16k -t flac - |\g' $wav_scp
 
 utils/validate_data_dir.sh --no-feats $dst || exit 1;
 
