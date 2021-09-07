@@ -1,1 +1,0 @@
- different silence phones will have different GMMs.  [note: here, all "shared split" means is that we may have one GMM for all the states, or we can split on states.  because they're context-independent phones, they don't see the context.]
