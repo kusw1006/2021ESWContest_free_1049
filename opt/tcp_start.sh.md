@@ -18,19 +18,20 @@
 
 
 
+> lat_wspecifier 추가
+
 ```sh
 final_mdl=/home/dcl2003/esw2021/test/models/korean/zeroth/final.mdl
 hclg_fst=/home/dcl2003/esw2021/test/models/korean/zeroth/HCLG.fst
 words_txt=/home/dcl2003/esw2021/test/models/korean/zeroth/words.txt
 online_conf=/home/dcl2003/esw2021/test/models/korean/zeroth/conf/online.conf
-audio=/home/dcl2003/practice/16k.wav
+
+dir=/home/dcl2003/esw2021/src
+lat_wspecifier="ark:|gzip -c >$dir/lat.1.gz"
 
 /opt/kaldi/src/online2bin/online2-tcp-nnet3-decode-faster --samp-freq=16000 --frames-per-chunk=20 --extra-left-context-initial=0 \
     --frame-subsampling-factor=3 --config=$online_conf --min-active=200 --max-active=7000 \
-    --beam=15.0 --lattice-beam=6.0 --acoustic-scale=1.0 --port-num=5050 $final_mdl $hclg_fst $words_txt
-
-
-# /opt/kaldi/src/online2bin/online2-tcp-nnet3-decode-faster $final_mdl $hclg_fst $words_txt
+    --beam=15.0 --lattice-beam=6.0 --acoustic-scale=1.0 --port-num=5051 $final_mdl $hclg_fst $words_txt "$lat_wspecifier"
 
 
 # 실제 사용(라즈베리파이에서~)
