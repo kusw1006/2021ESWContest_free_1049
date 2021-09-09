@@ -443,7 +443,7 @@ if [ ! -f $srcdir/lexicon ]; then
 fi
 
 
-##n-gram language model 없으면 buildNGRAM.sh에 srcdir 넣고 실행
+## n-gram language model 없으면 buildNGRAM.sh에 srcdir 넣고 실행
 ## buildNGRAM.sh: corpus섞고 train, test set을 split함
 ##				train, test corpus 병합하고 LM만듦
 ## 				perplexity(예측도) test하고 pruned LM 생성
