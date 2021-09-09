@@ -3,6 +3,7 @@
 > 경로: /opt/kaldi/src/online2bin/
 >
 > 작성자: 김한비
+> 코드제작: 이찬현, 김한비
 
 <br>
 
