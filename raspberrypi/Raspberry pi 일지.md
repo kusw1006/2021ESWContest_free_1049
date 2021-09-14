@@ -79,6 +79,9 @@ google SDK 파일 설치 필요 (새로운 sd card 사용 시)
 > `$ sudo chmod 777 'key이름.json'`  
 > `$ gcloud init`  
 
+**GOOGLE 제공 Sample Code 사용 시 경로 오류가 잦았음**
+**SynIn___ 모듈을 import하지 못하는 문제 지속적 발생**
+
 실행  
 `tts/youngqnew.py`  
 --> 실시간으로 받아오는 건 가능, 저장 말고 재생하도록 파일 수정  
