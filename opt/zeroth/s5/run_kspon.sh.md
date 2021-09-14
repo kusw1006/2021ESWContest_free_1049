@@ -4,7 +4,7 @@
 
 
 
-- new script!
+- AM 학습 모드 추가
 - 같은 경로에 /kspon 디렉토리 만듦
   - KsponSpeech_01.zip ~ KsponSpeech_05.zip
 
@@ -20,7 +20,7 @@
 # Copyright  2017  Atlas Guide (Author : Lucas Jo)
 #            2017  Gridspace Inc. (Author: Wonkyum Lee)
 #            2019  hwiorn <hwiorn@gmail.com>
-#
+#			 2021  Konkuk Univ. (Chanhyun lee)
 # Apache 2.0
 
 # Check list before start
@@ -32,6 +32,7 @@
 zeroth_data=./speechDATA
 kspon_data=./kspon
 nCPU=16
+MODE=AM
 
 . ./cmd.sh
 . ./path.sh
@@ -79,6 +80,7 @@ local/prepare_dict.sh data/local/lm data/local/dict_nosp
 utils/prepare_lang.sh data/local/dict_nosp \
 	"<UNK>" data/local/lang_tmp_nosp data/lang_nosp
 
+# G.fst 제작
 local/format_lms.sh --src-dir data/lang_nosp data/local/lm
 
 # Create ConstArpaLm format language model for full 3-gram and 4-gram LMs
@@ -163,10 +165,12 @@ utils/prepare_lang.sh data/local/dict \
 
 local/format_lms.sh --src-dir data/lang data/local/lm
 
-utils/build_const_arpa_lm.sh \
-      data/local/lm/zeroth.lm.tg.arpa.gz data/lang data/lang_test_tglarge
-utils/build_const_arpa_lm.sh \
-      data/local/lm/zeroth.lm.fg.arpa.gz data/lang data/lang_test_fglarge
+if [ ! $MODE="AM" ]; then
+    utils/build_const_arpa_lm.sh \
+          data/local/lm/zeroth.lm.tg.arpa.gz data/lang data/lang_test_tglarge
+    utils/build_const_arpa_lm.sh \
+          data/local/lm/zeroth.lm.fg.arpa.gz data/lang data/lang_test_fglarge
+fi
 
 # align the entire train_clean using the tri3b model
 steps/align_fmllr.sh --nj $nCPU --cmd "$train_cmd" \
@@ -177,28 +181,33 @@ echo "#### SAT again on train_clean ###########"
 steps/train_sat.sh  --cmd "$train_cmd" 4200 40000 \
   data/train_clean data/lang exp/tri3b_ali_train_clean exp/tri4b
 
-# decode using the tri4b model with pronunciation and silence probabilities
-utils/mkgraph.sh \
-  data/lang_test_tgsmall exp/tri4b exp/tri4b/graph_tgsmall
-  # <lang model> <acoustic model> <graph dir>
+if [ ! $MODE="AM" ]; then
+    # decode using the tri4b model with pronunciation and silence probabilities
+    utils/mkgraph.sh \
+      data/lang_test_tgsmall exp/tri4b exp/tri4b/graph_tgsmall
+      # <lang model> <acoustic model> <graph dir>
+fi
 
 # the size is properly set?
 utils/subset_data_dir.sh data/test_clean 200 data/test_200
 
-for test in test_200; do
-  nspk=$(wc -l <data/${test}/spk2utt)
-  steps/decode_fmllr.sh --nj $nspk --cmd "$decode_cmd" \
-    exp/tri4b/graph_tgsmall data/$test \
-    exp/tri4b/decode_tgsmall_$test
-  #steps/lmrescore.sh --cmd "$decode_cmd" data/lang_test_{tgsmall,tgmed} \
-  #  data/$test exp/tri4b/decode_{tgsmall,tgmed}_$test
-  steps/lmrescore_const_arpa.sh \
-    --cmd "$decode_cmd" data/lang_test_{tgsmall,tglarge} \
-    data/$test exp/tri4b/decode_{tgsmall,tglarge}_$test
-  steps/lmrescore_const_arpa.sh \
-    --cmd "$decode_cmd" data/lang_test_{tgsmall,fglarge} \
-    data/$test exp/tri4b/decode_{,fglarge}_$test
-done
+if [ ! $MODE="AM" ]; then
+	for test in test_200; do
+      nspk=$(wc -l <data/${test}/spk2utt)
+      steps/decode_fmllr.sh --nj $nspk --cmd "$decode_cmd" \
+        exp/tri4b/graph_tgsmall data/$test \
+        exp/tri4b/decode_tgsmall_$test
+      #steps/lmrescore.sh --cmd "$decode_cmd" data/lang_test_{tgsmall,tgmed} \
+      #  data/$test exp/tri4b/decode_{tgsmall,tgmed}_$test
+      steps/lmrescore_const_arpa.sh \
+        --cmd "$decode_cmd" data/lang_test_{tgsmall,tglarge} \
+        data/$test exp/tri4b/decode_{tgsmall,tglarge}_$test
+      steps/lmrescore_const_arpa.sh \
+        --cmd "$decode_cmd" data/lang_test_{tgsmall,fglarge} \
+        data/$test exp/tri4b/decode_{,fglarge}_$test
+    done
+fi
+
 
 # align train_clean_100 using the tri4b model
 steps/align_fmllr.sh --nj $nCPU --cmd "$train_cmd" \
