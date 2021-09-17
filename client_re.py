@@ -1,11 +1,12 @@
 #라즈베리파이 클라이언트 개발
+#실시간 수신 -> A{num}, 문장 끝 -> B{num}
+#리스코어 수신 -> C{num}
+#띄어쓰기 수신 -> D{num}
 import socket
 from _thread import *
 import threading
 from tkinter import *
 from time import sleep
-
-data_rec = 0
 
 def send(socket):
     global go_send
@@ -26,34 +27,25 @@ def send(socket):
             sleep(0.1)
 
 def receive(socket):
-    global data_rec
-    first = True
     while True:
         try:
             data = socket.recv(1024)
-            data_rec = data_rec + 1
-            print(data_rec)
-            data_idx = data[9] - 48
-            print(data_idx)
-            data_idx_st = str(data_idx) + ".0"
-            data_idx_fi = str(data_idx) + ".end"
-            data_idx_st_in = str(data_idx - 1) + ".0"
-            data = data[11:]
-            if data_rec == data_idx:
+            data = data.decode()
+            if data[0]=='A':
                 chat_log['state'] = 'normal'
-                if first:
-                    chat_log.insert("end",str(data.decode( )))
-                    first = False
-                else:
-                    chat_log.insert("end",str(data.decode()))
-                    #'\n' + 
-                    chat_log.see('end')
+                chat_log.insert("end",str(data[data.find('}') + 1:]) + ' ')
+                chat_log.see('end')
                 chat_log['state'] = 'disabled'
-            else:
-                data_rec = data_rec - 1
+            elif data[0]=='B':
                 chat_log['state'] = 'normal'
-                chat_log.delete(data_idx_st, data_idx_fi) 
-                chat_log.insert(data_idx_st,str(data.decode()))
+                chat_log.insert("end",str(data[data.find('}') + 1:]) + '\n') 
+                chat_log.see('end')
+                chat_log['state'] = 'disabled'
+            elif data[0]=='C' or data[0]=='D':
+                index_num = int(data[data.find('{') + 1:data.find('}')])
+                chat_log['state'] = 'normal'
+                chat_log.delete(str(index_num)+".0",str(index_num)+".end")
+                chat_log.insert(str(index_num)+".0",str(data[data.find('}') + 1:]))
                 chat_log.see('end')
                 chat_log['state'] = 'disabled'
         except ConnectionAbortedError as e:
