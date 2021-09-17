@@ -3,6 +3,7 @@
 > 경로: /opt/kaldi/src/online2bin/
 >
 > 작성자: 김한비
+> 코드제작: 이찬현, 김한비
 
 <br>
 
@@ -366,6 +367,7 @@ rescore 문장 말고 raw문장 출력(인터페이스를 위해 순서를 이�
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
 
+
 #include "feat/wave-reader.h"
 #include "online2/online-nnet3-decoding.h"
 #include "online2/online-nnet2-feature-pipeline.h"
@@ -393,17 +395,28 @@ rescore 문장 말고 raw문장 출력(인터페이스를 위해 순서를 이�
 #include <resolv.h>
 #include <pthread.h>
 
+#include <sys/un.h>
+
 //------------Add------------//
 #define MAX_SEN 100
-
+#define MAX_CLNT 8
 std::string* rescoreStr[MAX_SEN];
+std::string rawmsg[MAX_SEN];
 char flag[MAX_SEN] = {0, };
 int id = 0;
+
+int clnt_cnt = 0;
+int clnt_socks[MAX_CLNT];
 
 typedef struct _threadPack{
   int id;
   fst::SymbolTable* _word_syms;
 }threadPack;
+
+typedef struct _socketPack{
+  int id;
+  int* clnt_socks;
+}socketPack;
 //---------------------------//
 
 
@@ -421,14 +434,16 @@ class TcpServer {
 
   Vector<BaseFloat> GetChunk(); // get the data read by above method
 
-  bool Write(const std::string &msg); // write to accepted client
-  bool WriteLn(const std::string &msg, const std::string &eol = "\n"); // write line to accepted client
+  bool Write(const std::string &msg, int clnt_sock); // write to accepted client
+  bool WriteLn(const std::string &msg, const std::string &eol = "\n", int clnt_sock = clnt_socks[2]); // write line to accepted client
 
   void Disconnect();
   
 
  private:
-  struct ::sockaddr_in h_addr_;
+  struct ::sockaddr_in serv_addr;
+  struct ::sockaddr_in clnt_addr;
+  int serv_sock, clnt_sock;
   int32 server_desc_, client_desc_;
   int16 *samp_buf_;
   size_t buf_len_, has_read_;
@@ -451,7 +466,6 @@ std::string LatticeToString(const Lattice &lat, const fst::SymbolTable &word_sym
       msg << "<#" << std::to_string(i) << "> ";
     } else
       msg << s << " ";
-      //msg << s;
   }
   return msg.str();
 }
@@ -542,9 +556,35 @@ void* rescoring(void* _Package) {
 
   return 0;
 }
+
+void* send_msg_rescore(void*_sockPack) {
+	
+  char to_send[1000];
+	// int send_clnt[MAX_CLNT];
+  int* send_clnt;
+	socketPack* sockPack = (socketPack *)_sockPack;
+  
+  //id가 필요없는데?  
+  int sendMsgId = sockPack->id;
+  send_clnt = sockPack->clnt_socks;
+	
+
+  for(int idx=0; idx<MAX_SEN; idx++) {
+    if(flag[idx]==1) {
+
+      strcpy(to_send, rescoreStr[idx]->c_str());
+	    int len=strlen(to_send);
+      //KALDI_LOG << "동작확인~~~~~~" << to_send;
+      write(*send_clnt, to_send,len );
+      write(*(send_clnt+1), to_send,len );
+
+      flag[idx]=0;
+      delete rescoreStr[idx];
+    }
+  }
+  
+}
 //---------------------------//
-
-
 
 
 
@@ -585,6 +625,8 @@ int main(int argc, char *argv[]) {
 
     //-------------Add-----------//
     threadPack Package;
+		
+    socketPack sockPack;
     //---------------------------//
 
 
@@ -625,6 +667,7 @@ int main(int argc, char *argv[]) {
     
     // for multithreading
     pthread_t thread_id[MAX_SEN];
+    pthread_t tid[MAX_CLNT]; // for multi socket
     //---------------------------//
     
     OnlineNnet2FeaturePipelineInfo feature_info(feature_opts);
@@ -670,7 +713,28 @@ int main(int argc, char *argv[]) {
 
     while (true) {
 
-      server.Accept();
+      while(clnt_cnt!=3) {
+        int clnt_sock_temp = server.Accept();
+        KALDI_LOG<<"@@@@@@@@@@@@@@@@@11111@@@@@@@@@@@@@@@@@";
+        int check=0;
+        for(int cnt=0; cnt<clnt_cnt; cnt++) {
+          if(clnt_socks[cnt]==clnt_sock_temp) {
+            check=cnt;
+            break;
+          }
+          else {
+            check++;
+          }
+        }
+        if(check == clnt_cnt) {
+            clnt_socks[clnt_cnt]=clnt_sock_temp;
+            clnt_cnt++;
+        }
+        KALDI_LOG<<"@@@@@@@@@@@@@@@@@22222@@@@@@@@@@@@@@@@@";
+
+      }
+
+
 
       int32 samp_count = 0;// this is used for output refresh rate
       size_t chunk_len = static_cast<size_t>(chunk_length_secs * samp_freq);
@@ -725,10 +789,12 @@ int main(int argc, char *argv[]) {
                 msg = GetTimeString(t_beg, t_end, frame_shift * frame_subsampling) + " " + msg;
               }
 
+              //---------------------임시-----------------------//
+
               KALDI_VLOG(1) << "EndOfAudio, sending message: " << msg;
-              server.WriteLn(msg);
+              server.WriteLn(msg,"\n", clnt_socks[1]);
             } else
-              server.Write("\n");
+              server.Write("\n", clnt_socks[1]);
             server.Disconnect();
             break;
           }
@@ -761,9 +827,9 @@ int main(int argc, char *argv[]) {
                 int32 t_end = frame_offset + GetLatticeTimeSpan(lat);
                 msg = GetTimeString(t_beg, t_end, frame_shift * frame_subsampling) + " " + msg;
               }
-
+              //--------------------임시----------------------//
               KALDI_VLOG(1) << "Temporary transcript: " << msg;
-              server.WriteLn(msg, "\r");
+              server.WriteLn(msg, "\r", clnt_socks[1]);
 
               // CompactLattice clat;
               // ConvertLattice(lat, &clat);
@@ -773,6 +839,46 @@ int main(int argc, char *argv[]) {
             }
             check_count += check_period;
           }
+          
+
+          //-------------Add-----------//
+					
+					// for(int idx=0; idx<MAX_SEN; idx++) {
+          //   if(flag[idx]==1) {
+
+          //     pthread_create(&tid[0], NULL, send_msg_rescore, (void *)&sockPack);
+          //     pthread_detach(tid[0]);
+					// 		// //to python
+          //     // server.WriteLn(*rescoreStr[idx] ,"\n",clnt_socks[0]);
+							
+					// 		// //to raspi2
+          //     // //server.WriteLn("\n" ,clnt_socks[2]);
+          //     // server.WriteLn(*rescoreStr[idx] ,"\n",clnt_socks[2]);
+          //     // //server.WriteLn("\n" ,clnt_socks[2]);
+
+          //     flag[idx]=0;
+          //     delete rescoreStr[idx];
+          //   }
+          // }
+
+          sockPack.id = id;
+          sockPack.clnt_socks = clnt_socks;
+
+          pthread_create(&tid[0], NULL, send_msg_rescore, (void *)&sockPack);
+          pthread_detach(tid[0]);
+							// //to python
+              // server.WriteLn(*rescoreStr[idx] ,"\n",clnt_socks[0]);
+							
+							// //to raspi2
+              // //server.WriteLn("\n" ,clnt_socks[2]);
+              // server.WriteLn(*rescoreStr[idx] ,"\n",clnt_socks[2]);
+              // //server.WriteLn("\n" ,clnt_socks[2]);
+
+              
+            
+          
+          //---------------------------//
+
 
           if (decoder.EndpointDetected(endpoint_opts)) {
             decoder.FinalizeDecoding();
@@ -827,19 +933,8 @@ int main(int argc, char *argv[]) {
               //   pthread_detach(thread_id[1]);
               // } 9.9 700 139 1800 700 8300 8900 89Gb
 
-              for(int idx=0; idx<=id; idx++) {
-                if(flag[idx]==1) {
-                  server.WriteLn("\n");
-                  server.WriteLn(*rescoreStr[idx]);
-                  server.WriteLn("\n");
-
-                  flag[idx]=0;
-                  delete rescoreStr[idx];
-                }
-              }
-
-
-              server.WriteLn((std::to_string(id) + ": " + msg));
+							server.WriteLn((std::to_string(id) + ": " + msg),"\n", clnt_socks[0]);
+              server.WriteLn((std::to_string(id) + ": " + msg),"\n", clnt_socks[1]);
 
               id = (id + 1) % 100;
             }
@@ -868,9 +963,9 @@ TcpServer::TcpServer(int read_timeout) {
 }
 
 bool TcpServer::Listen(int32 port) {
-  h_addr_.sin_addr.s_addr = INADDR_ANY;
-  h_addr_.sin_port = htons(port);
-  h_addr_.sin_family = AF_INET;
+  serv_addr.sin_addr.s_addr = INADDR_ANY;
+  serv_addr.sin_port = htons(port);
+  serv_addr.sin_family = AF_INET;
 
   server_desc_ = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -886,7 +981,7 @@ bool TcpServer::Listen(int32 port) {
     return false;
   }
 
-  if (bind(server_desc_, (struct sockaddr *) &h_addr_, sizeof(h_addr_)) == -1) {
+  if (bind(server_desc_, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) == -1) {
     KALDI_ERR << "Cannot bind to port: " << port << " (is it taken?)";
     return false;
   }
@@ -915,7 +1010,8 @@ int32 TcpServer::Accept() {
   socklen_t len;
 
   len = sizeof(struct sockaddr);
-  client_desc_ = accept(server_desc_, (struct sockaddr *) &h_addr_, &len);
+  client_desc_ = accept(server_desc_, (struct sockaddr *) &clnt_addr, &len);
+  
 
   struct sockaddr_storage addr;
   char ipstr[20];
@@ -956,7 +1052,7 @@ bool TcpServer::ReadChunk(size_t len) {
       KALDI_WARN << "Socket error! Disconnecting...";
       break;
     }
-    ret = read(client_desc_, static_cast<void *>(samp_buf_p + has_read_), to_read);
+    ret = read(clnt_socks[2], static_cast<void *>(samp_buf_p + has_read_), to_read);
     if (ret <= 0) {
       KALDI_WARN << "Stream over...";
       break;
@@ -980,13 +1076,13 @@ Vector<BaseFloat> TcpServer::GetChunk() {
   return buf;
 }
 
-bool TcpServer::Write(const std::string &msg) {
+bool TcpServer::Write(const std::string &msg, int clnt_sock) {
 
   const char *p = msg.c_str();
   size_t to_write = msg.size();
   size_t wrote = 0;
   while (to_write > 0) {
-    ssize_t ret = write(client_desc_, static_cast<const void *>(p + wrote), to_write);
+    ssize_t ret = write(clnt_sock, static_cast<const void *>(p + wrote), to_write);
     if (ret <= 0)
       return false;
 
@@ -997,9 +1093,9 @@ bool TcpServer::Write(const std::string &msg) {
   return true;
 }
 
-bool TcpServer::WriteLn(const std::string &msg, const std::string &eol) {
-  if (Write(msg))
-    return Write(eol);
+bool TcpServer::WriteLn(const std::string &msg, const std::string &eol, int clnt_sock) {
+  if (Write(msg, clnt_sock))
+    return Write(eol, clnt_sock);
   else return false;
 }
 
