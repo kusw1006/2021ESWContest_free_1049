@@ -41,36 +41,16 @@ def recv(client_sock):
             play(song)
  
 
-
-
- 
-
- 
-
- 
-
 #-------------이부분만 반복--------------#
-
 import time
 
- 
-
- 
 
 HOST = '114.70.22.237'
-
 PORT = 5052
 
  
-
- 
-
 client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-
 client_socket.connect((HOST,PORT))
 
- 
-
 thread1 = threading.Thread(target = recv, args=(client_socket, ))
-
 thread1.start()

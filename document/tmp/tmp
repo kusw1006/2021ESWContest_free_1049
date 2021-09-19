@@ -1,0 +1,1 @@
+It's important that we initialize decode_fst after feature_reader, as it can prevent crashes on systems installed without enough virtual memory. It has to do with what happens on UNIX systems if you callKO
