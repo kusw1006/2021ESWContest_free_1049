@@ -396,6 +396,26 @@ rescore 문장 말고 raw문장 출력(인터페이스를 위해 순서를 이�
 #include <pthread.h>
 
 #include <sys/un.h>
+#include <iconv.h>
+
+
+bool ChangeCharset(char *szSrcCharset, char *szDstCharset, char *szSrc, int nSrcLength, char *szDst, int nDstLength) { 
+  iconv_t it = iconv_open(szDstCharset, szSrcCharset); 
+  if (it == (iconv_t)(-1)) 
+    return false; 
+  
+  bool result = true; 
+  size_t nSrcStrLen = nSrcLength; 
+  size_t nDstStrLen = nDstLength; 
+  size_t cc = iconv(it, &szSrc, &nSrcStrLen, &szDst, &nDstStrLen); 
+  if (cc == (size_t)(-1)) 
+    result = false; 
+  if (iconv_close(it) == -1) 
+    result = false; 
+  
+  return result; 
+}
+
 
 //------------Add------------//
 #define MAX_SEN 100
@@ -425,15 +445,14 @@ int id = 0;
 int clnt_cnt = 0;
 int clnt_socks[MAX_CLNT];
 
+int spaceId = 0;
+
+
 typedef struct _threadPack{
   int id;
+  int* clnt_socks;
   fst::SymbolTable* _word_syms;
 }threadPack;
-
-typedef struct _socketPack{
-  int id;
-  int* clnt_socks;
-}socketPack;
 //---------------------------//
 
 
@@ -532,6 +551,8 @@ void* rescoring(void* _Package) {
   // popen을 이용하여 rescore를 진행하고, rescoreBuf에 담기
   FILE* stream=popen("/opt/zeroth/s5/local/test.sh | grep 000","r");
   fgets(rescoreBuf[rescoreId], 1280, stream);
+
+  
   
   // rescoreBuf 단어가 숫자로 이루어져있기때문에, 문자로 변환해줘야함
   // 변환 값은 rescoreStr에 저장됨
@@ -566,75 +587,41 @@ void* rescoring(void* _Package) {
   // 저장공간 해제
   free(rescoreBuf[rescoreId]);
 
-  // rescoreFlag 변환
-  rescoreFlag[rescoreId] = 1;
+  char to_send[BUFF_SIZE];
+  int* send_clnt;
+  send_clnt = rescorePack->clnt_socks;
+
+  strcpy(to_send, rescoreStr[rescoreId]->c_str());
+  int len = strlen(to_send);
+
+  // 0번 1번 클라이언트에 각각 보내기
+  for(int j = 0; j < MAX_CLNT - 1; j++) {
+    send(*(send_clnt + j), to_send, len, 0);
+  }
+  delete rescoreStr[rescoreId];
 
   return 0;
 }
 
 
 // 내장된 write 함수를 이용하여 rescore된 데이터 전송
-void* send_msg(void*_sockPack) {
-
-  char to_send[BUFF_SIZE];
-  int* send_clnt;
-
-	socketPack* sockPack = (socketPack *)_sockPack;
-  send_clnt = sockPack->clnt_socks;
-	
-  for(int idx=0; idx<MAX_SEN; idx++) {
-    if(rescoreFlag[idx]==1) {
-
-      strcpy(to_send, rescoreStr[idx]->c_str());
-	    int len = strlen(to_send);
-
-      // 0번 1번 클라이언트에 각각 보내기
-      // for(int j = 0; j < MAX_CLNT - 1; j++) {
-      //   write(*(send_clnt + j), to_send, len);
-      // }
-
-      // 0번이 띄어쓰기 서버
-      write(*(send_clnt + SPACE_SV), to_send, len);
-
-      rescoreFlag[idx] = 0;
-      delete rescoreStr[idx];
-    }
-    if(spaceFlag[idx]==1) {
-
-      strcpy(to_send, spaceStr[idx]->c_str());
-	    int len = strlen(to_send);
-
-      // 1번이 채팅 서버
-      write(*(send_clnt + CHAT_SV), to_send, len);
-
-      spaceFlag[idx] = 0;
-      delete spaceStr[idx];
-    }
-  }
-}
 
 
 // 내장된 read 함수를 이용하여 띄어쓰기 된 데이터 수신
-void* recv_msg_space(void* _sockPack) {
-  int spaceId;
+void* recv_msg_space(void* _Package) {
   int* recv_clnt;
 
-
-	socketPack* sockPack = (socketPack *)_sockPack;
-  spaceId = sockPack->id;
+  threadPack* sockPack = (threadPack *)_Package;
   recv_clnt = sockPack->clnt_socks;
-
+  
   char to_recv[BUFF_SIZE];
-  spaceStr[spaceId] = new std::string();
-
-  for(int idx=0; idx<MAX_SEN; idx++) {
 
     // 0번이 띄어쓰기 서버
     // @@ 무작정 1000개까지 다 읽어와도 되는건가?
-    read(*(recv_clnt + SPACE_SV), to_recv, BUFF_SIZE);
-    spaceStr[spaceId]->append(to_recv); 
-
-    spaceFlag[idx] = 1;
+  int ret = read(*(recv_clnt + SPACE_SV), to_recv, BUFF_SIZE);
+  int len = strlen(to_recv);
+  if(ret) {
+    send(*(recv_clnt + CHAT_SV), to_recv, len, 0);
   }
 }
 
@@ -650,6 +637,8 @@ int main(int argc, char *argv[]) {
 
     typedef kaldi::int32 int32;
     typedef kaldi::int64 int64;
+
+    
 
     const char *usage =
         "Reads in audio from a network socket and performs online\n"
@@ -680,7 +669,6 @@ int main(int argc, char *argv[]) {
 
     //-------------Add-----------//
     threadPack Package;
-    socketPack sockPack;
     //---------------------------//
 
 
@@ -789,6 +777,16 @@ int main(int argc, char *argv[]) {
         KALDI_LOG<<"@@@@@@@@@@@@@@@@@22222@@@@@@@@@@@@@@@@@";
       }
 
+      //-------------Add-----------//
+      Package.clnt_socks = clnt_socks;
+      Package.id = id;
+
+      // 띄어쓰기 서버와 채팅서버로 보내줄 데이터
+      // 띄어쓰기 서버에서 받아올 데이터
+      pthread_create(&clntThreadId[0], NULL, recv_msg_space, (void *)&Package);
+      pthread_detach(clntThreadId[0]);
+      //---------------------------//
+
 
 
       int32 samp_count = 0;// this is used for output refresh rate
@@ -896,19 +894,19 @@ int main(int argc, char *argv[]) {
           }
           
 
-          //-------------Add-----------//
-          sockPack.clnt_socks = clnt_socks;
-          Package.id = id;
-          sockPack.id = Package.id;
+          // //-------------Add-----------//
+          // sockPack.clnt_socks = clnt_socks;
+          // Package.id = id;
+          // sockPack.id = Package.id;
 
-          // 띄어쓰기 서버와 채팅서버로 보내줄 데이터
-          pthread_create(&clntThreadId[0], NULL, send_msg, (void *)&sockPack);
-          pthread_detach(clntThreadId[0]);
+          // // 띄어쓰기 서버와 채팅서버로 보내줄 데이터
+          // pthread_create(&clntThreadId[0], NULL, send_msg, (void *)&sockPack);
+          // pthread_detach(clntThreadId[0]);
 
-          // 띄어쓰기 서버에서 받아올 데이터
-          pthread_create(&clntThreadId[1], NULL, recv_msg_space, (void *)&sockPack);
-          pthread_detach(clntThreadId[1]);
-          //---------------------------//
+          // // 띄어쓰기 서버에서 받아올 데이터
+          // pthread_create(&clntThreadId[1], NULL, recv_msg_space, (void *)&sockPack);
+          // pthread_detach(clntThreadId[1]);
+          // //---------------------------//
 
 
           if (decoder.EndpointDetected(endpoint_opts)) {
@@ -940,34 +938,44 @@ int main(int argc, char *argv[]) {
               Package._word_syms = word_syms;
               
               
+              // KALDI_LOG << msg << "@@@@@@@@@@@@@@@@@@@@@@$$$$$$$$$$$$$$$$$$$$$$";
               //pthread_create(&reThreadId[id], NULL, rescoring, (void *)word_syms);
               pthread_create(&reThreadId[id], NULL, rescoring, (void *)&Package);
               pthread_detach(reThreadId[id]);
-              //KALDI_LOG<<"@@@@@@@@@@@@@@@@@"<< id <<"@@@@@@@@@@@@@@@@@";
-              //CompactLattice *latt = &lat;
-              
-              
-              // int status;
-              // status = pthread_kill(reThreadId[0],0);
-              // if ( status == ESRCH ) // 존재하지 않는 쓰레드 아이디일때, 다시 살리면 된다.
-              // {   
-              // }
-              // else if ( status == EINVAL ) // 잘못된 시그널을 전달했을 경우.
-              // { 
-              // } 
-              // else // 현재 쓰레드는 생존해 있다.
-              // {
-              //   pthread_create(&reThreadId[1], NULL, rescoring2, (void *)word_syms);
-              //   pthread_detach(reThreadId[1]);
-              // } 9.9 700 139 1800 700 8300 8900 89Gb
 
+              
+              char temp2[BUFF_SIZE];
+              strcpy(temp2, msg.c_str());
+              int len = strlen(temp2);
+
+              send(*(clnt_socks + SPACE_SV), temp2, len, 0);
+              send(*(clnt_socks + CHAT_SV), temp2, len, 0);
+              
+              // KALDI_LOG << msg;
+
+              //wchar_t* temp_char = new wchar_t[len];
+              //mbstowcs(temp_char, temp, len);
+
+              //const wchar_t* message = L"Welcome server!\r\n>\0";
+              //send(*(clnt_socks + SPACE_SV), (char*)message, wcslen(message) * 2 + 2, 0);
+
+              //send(*(clnt_socks + SPACE_SV), (char *)temp_char, wcslen(temp_char) * 2 + 2, 0);
+              
+              // write(*(clnt_socks + SPACE_SV), msg.c_str(), 1024);
+              // char to_send_utf8[1024];
+              // ChangeCharset("euc-kr", "utf-8", temp, strlen(temp), to_send_utf8, sizeof(to_send_utf8));
+             
+             
+              // @ (바보)김한비
+              
+    
               
               
               // 0은 띄어쓰기 서버, 1은 채팅 서버
 							//server.WriteLn((std::to_string(id) + "temp: " + msg),"\n", clnt_socks[0]);
               //server.WriteLn((std::to_string(id) + "temp: " + msg),"\n", clnt_socks[1]);
 
-              id = (id + 1) % 100;
+              id = (id + 1) % MAX_SEN;
             }
             //---------------------------//
             // 애로사항부터 해서 어떻게 코딩한거고 목적이 어떻게 되는지 markdown에 서술
@@ -1086,7 +1094,7 @@ bool TcpServer::ReadChunk(size_t len) {
     // 음성데이터에서 데이터를 읽어들였을때 데이터가 없으면
     ret = read(clnt_socks[MAX_CLNT - 1], static_cast<void *>(samp_buf_p + has_read_), to_read);
     if (ret <= 0) {
-      KALDI_WARN << "Stream over...";
+      // KALDI_WARN << "Stream over...";
       break;
     }
     to_read -= ret;
@@ -1114,7 +1122,8 @@ bool TcpServer::Write(const std::string &msg, int clnt_sock) {
   size_t to_write = msg.size();
   size_t wrote = 0;
   while (to_write > 0) {
-    ssize_t ret = write(clnt_sock, static_cast<const void *>(p + wrote), to_write);
+    // ssize_t ret = write(clnt_sock, static_cast<const void *>(p + wrote), to_write);
+    ssize_t ret = send(clnt_sock, static_cast<const void *>(p + wrote), to_write, 0);
     if (ret <= 0)
       return false;
 
