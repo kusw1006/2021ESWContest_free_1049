@@ -10,29 +10,18 @@ from tkinter import *
 from time import sleep
 import pyaudio
 
-chat_number = [0]
-chat_cnt = 1
-flag = 1
-tag_flag = 0
-
-def audio_receive(socket):
-    p = pyaudio.PyAudio()
-    stream = p.open(format=pyaudio.paInt16, channels=1, rate=10240, INPUT=True)
-    while True:
-        data = socket.recv(1024)
-        if data:
-            stream.write(data)
-    socket.close()
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
+chat_number = [0] #각 index id에 맞춘 줄을 기억하기 위한 리스트
+chat_cnt = 1 #줄 수를 count하는 변수
+flag = 1 #A값에서 제일 처음 들어온 변수인지 체크하는 플래그
+tag_flag = 0 #이전에 사용된 mark tag인지 확인하기 위한 플래그
+pre_index_num = 0 #이전 index_num을 기억하는 용도
 
 def send(socket):
     global go_send, chat_cnt
     while True:
         if go_send:
-            message = (message_input.get(1.0,"end")).rstrip()
-            if message[0] != 'A' and message[0] != 'B' and message[0] != 'C' and message[0] != 'D' and message[0] != 'E' and message[0] != 'F':
+            message = (message_input.get(1.0,"end")).rstrip() #입력 된 메세지 읽어오기
+            if message[0] != 'A' and message[0] != 'C' and message[0] != 'D' and message[0] != 'T' and message[0] != 'E' and message[0] != 'F':
                 chat_log['state'] = 'normal'
                 chat_log.insert("end",'손님' + '\n')
                 chat_log.tag_add(str(chat_cnt) + 'C', str(chat_cnt) + ".0", str(chat_cnt) + ".end")
@@ -45,22 +34,24 @@ def send(socket):
                 chat_log.tag_config(str(chat_cnt) + 'C', foreground="green", font=("Arial", 14, "bold"),justify=RIGHT)
                 chat_cnt = chat_cnt + 1
                 #메세지 출력용
-            elif message[0] == 'E':
+            elif message[0] == 'F':
                 chat_log['state'] = 'normal'
                 chat_log.insert("end",'[System] 통화가 시작됩니다.' + '\n')
                 chat_log.tag_add(str(chat_cnt) + 'C', str(chat_cnt) + ".0", str(chat_cnt) + ".end")
                 chat_log.tag_config(str(chat_cnt) + 'C', foreground="blue", font=("Arial", 10, "bold"),justify=CENTER)
                 chat_cnt = chat_cnt + 1
                 chat_log['state'] = 'disabled'
-            elif message[0] == 'F':
+                #통화 시작 알림
+            elif message[0] == 'E':
                 chat_log['state'] = 'normal'
                 chat_log.insert("end",'[System] 이 통화는 청각장애인 분들의 원활한 통화를 위한 실시간 통역시스템이 작동하고 있습니다. 여유를 가지고 천천히 답변해주세요.' + '\n')
                 chat_log.tag_add(str(chat_cnt) + 'C', str(chat_cnt) + ".0", str(chat_cnt) + ".end")
                 chat_log.tag_config(str(chat_cnt) + 'C', foreground="blue", font=("Arial", 10, "bold"))
                 chat_cnt = chat_cnt + 1
                 chat_log['state'] = 'disabled'
-            socket.send(message.encode())
-            message_input.delete(1.0, "end")
+                #시스템 알림
+            socket.send(message.encode()) #서버로 텍스트 보내기
+            message_input.delete(1.0, "end") #입력창 비우기
             go_send = False
         else:
             if go_out:
@@ -69,70 +60,64 @@ def send(socket):
             sleep(0.1)
 
 def receive(socket):
-    global chat_cnt, flag, tag_flag
+    global chat_cnt, flag, tag_flag, pre_index_num
     while True:
         try:
-            data = socket.recv(1024)
-            data = data.decode()
-            if(len(data)==4 or len(data)==1): continue
-            if data[0]=='A':
+            data = socket.recv(1024) #서버로부터 텍스트 받아오기
+            data = data.decode() #디코드
+            if(len(data)==1): continue #비어있을 경우 continue
+            if data[0]=='A': #A로 들어오는 경우
                 print("A")
-                index_num = int(data[data.find('{') + 1:data.find('}')])
+                index_num = int(data[data.find('{') + 1:data.find('}')]) #index id 추출
+                if(pre_index_num != index_num): #만약 index id에 변화가 있다면 플래그 변수 초기화
+                    flag = 1
+                    tag_flag = 0
+                    pre_index_num = index_num
+                print(index_num)
                 chat_log['state'] = 'normal'
-                if flag == 1:
+                if flag == 1: #처음 들어온 A 값이라면
                     print("flag 1")
                     chat_log.insert(str(chat_cnt) + ".0",'점주' + '\n')
                     chat_log.tag_add(str(chat_cnt) + 'C', str(chat_cnt) + ".0", str(chat_cnt) + ".end")
                     chat_log.tag_config(str(chat_cnt) + 'C', foreground="black", font=("Arial", 8, "bold"))
-                    chat_cnt = chat_cnt + 1
+                    chat_cnt = chat_cnt + 1 #점주라는 이름 띄우기
                     print(chat_cnt)
-                    chat_number.append(chat_cnt)
-                    chat_log.insert("end", str(data[data.find('}') + 1:]) + ' ')
-                    if tag_flag == 0:
+                    chat_number.append(chat_cnt) #index id에 맞는 줄 저장
+                    chat_log.insert("end",'\n') #줄 띄워주기
+                    chat_log.see('end')
+                    chat_cnt = chat_cnt + 1
+                    chat_log.insert(str(chat_number[index_num]) + ".end", str(data[data.find('}') + 1:]) + ' ') #텍스트 입력
+                    if tag_flag == 0: #이전에 tag된 적이 없다면
                         print("flag 1 tag_flag 0")
                         chat_log.tag_add(chat_number[index_num], str(chat_number[index_num]) + ".0", str(chat_number[index_num]) + ".end")
                         chat_log.tag_config(chat_number[index_num], foreground="red", font=("Arial", 14, "bold"))
                         tag_flag = 1
-                    else:
+                    else: #이전에 tag된 적이 있다면
                         print("flag 1 tag_flag 1")
                         chat_log.tag_delete(chat_number[index_num])
                         chat_log.tag_add(chat_number[index_num], str(chat_number[index_num]) + ".0", str(chat_number[index_num]) + ".end")
                         chat_log.tag_config(chat_number[index_num], foreground="red", font=("Arial", 14, "bold"))
                     flag = 0
                 else :
-                    chat_log.insert(str(chat_cnt) + ".end",str(data[data.find('}') + 1:]) + ' ')
-                    if tag_flag == 0:
+                    chat_log.insert(str(chat_number[index_num]) + ".end",str(data[data.find('}') + 1:]) + ' ')
+                    if tag_flag == 0:#이전에 tag된 적이 없다면
                         print("flag 0 tag_flag 0")
                         chat_log.tag_add(chat_number[index_num], str(chat_number[index_num]) + ".0", str(chat_number[index_num]) + ".end")
                         chat_log.tag_config(chat_number[index_num], foreground="red", font=("Arial", 14, "bold"))
                         tag_flag = 1
-                    else:
+                    else:#이전에 tag된 적이 있다면
                         print("flag 0 tag_flag 1")
                         chat_log.tag_delete(chat_number[index_num])
                         chat_log.tag_add(chat_number[index_num], str(chat_number[index_num]) + ".0", str(chat_number[index_num]) + ".end")
                         chat_log.tag_config(chat_number[index_num], foreground="red", font=("Arial", 14, "bold"))
                 chat_log.see('end')
                 chat_log['state'] = 'disabled'
-            elif data[0]=='T' :
-                print("T")
-                flag = 1
-                tag_flag = 0
-                index_num = int(data[data.find('{') + 1:data.find('}')])
-                chat_log['state'] = 'normal'
-                chat_log.delete(str(chat_number[index_num])+".0",str(chat_number[index_num])+".end")
-                chat_log.insert(str(chat_number[index_num])+".0",str(data[data.find('}') + 1:]))
-                chat_log.tag_delete(chat_number[index_num])
-                chat_log.tag_add(chat_number[index_num], str(chat_number[index_num]) + ".0", str(chat_number[index_num]) + ".end")
-                chat_log.tag_config(chat_number[index_num], foreground="red", font=("Arial", 14, "bold"))
-                chat_log.insert("end",'\n')
-                chat_log.see('end')
-                chat_cnt = chat_cnt + 1
-                print(chat_cnt)
-                chat_log['state'] = 'disabled'
-            elif data[0]=='C' or data[0]=='D':
+            elif data[0]=='C' or data[0]=='D' or data[0]=='T': #만약 rescore, decode, space 문장이 들어올 경우 문장 덮어쓰기
                 if data[0]=='C': print('C')
                 if data[0]=='D': print('D')
+                if data[0]=='T': print('T')
                 index_num = int(data[data.find('{') + 1:data.find('}')])
+                print(index_num)
                 chat_log['state'] = 'normal'
                 chat_log.delete(str(chat_number[index_num])+".0",str(chat_number[index_num])+".end")
                 chat_log.insert(str(chat_number[index_num])+".0",str(data[data.find('}') + 1:]))
@@ -141,7 +126,7 @@ def receive(socket):
                 chat_log.tag_config(chat_number[index_num], foreground="red", font=("Arial", 14, "bold"))
                 chat_log.see('end')
                 chat_log['state'] = 'disabled'
-        except ConnectionAbortedError as e:
+        except ConnectionAbortedError as e: #예외 발생시 통화 종료
             chat_log['state'] = 'normal'
             chat_log.insert("end", '\n[System] 통화가 종료됩니다.\n')
             chat_log['state'] = 'disabled'
@@ -153,14 +138,8 @@ def login():
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((HOST, PORT))
 
-    #client_socket_audio = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #client_socket_audio.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    #client_socket_audio.settimeout(10)
-    #client_socket_audio.connect((HOST, PORT + 1))
-
     threading.Thread(target=send, args= (client_socket,)).start()
     threading.Thread(target=receive, args= (client_socket,)).start()
-    #threading.Thread(target=audio_receive, args=(client_socket_audio,)).start()
     exit()
 
 def try_login():
