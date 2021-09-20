@@ -15,7 +15,6 @@ import io
 from io import BytesIO
 
 
- 
 
 import base64
 
@@ -54,7 +53,7 @@ def write_to_fp(fp, input_wav):
 def recv(client_sock):
 
     fp = BytesIO()
-
+    id = 0
     while True:
 
         recv = client_sock.recv(1024)  
@@ -64,8 +63,9 @@ def recv(client_sock):
             write_to_fp(fp, recv)
 
             print(len(recv),len(fp.read()))
+            id += 1
 
-        if fp.read and len(recv)==1:       
+        if len(recv) > 1 and len(recv) < 1024 and id > 8:       
 
             print("aaa",len(recv),len(fp.read()))
 
