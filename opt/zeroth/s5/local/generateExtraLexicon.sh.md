@@ -2,7 +2,16 @@
 
 > AI-Hub kspon speech related scripts
 
-
+> <핵심기능\>
+>
+> 1. 자체 중복 단어 지우고 sorting (UniqWords)
+> 2. 발음생성
+>    - 영어: genPronunciation_cmu.py
+>    - 한국어: genPronunciation.py
+> 3. genPronSeq를 통해 발음 교정하여 dic.pronun으로 저장
+> 4. genLexicon을 이용하여 extra_lexicon이라는 이름으로 저장
+>
+> **이후 run_kspon.sh에서 data/local/lm으로 이동시킨 후, prepare dict를 이용해 기존 lexicon과 병합, prepare lang을 통해 words로 변형 등 다양한 활용**
 
 - new script!
 
@@ -67,6 +76,7 @@ fi
 
 echo $0: Generating pronunciation
 cat $data_dir/uniqWords.nonhangul.sorted.pron $data_dir/uniqWords.hangul > $data_dir/finalList
+# genPhoneSeq.py에서 finalList를 가지고 dic.pronun생성
 env LC_ALL=en_US.UTF-8 $script_dir/genPhoneSeq.py $data_dir/finalList
 
 echo $0: Extracting uniq lexicon
