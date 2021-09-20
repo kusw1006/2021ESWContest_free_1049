@@ -1,3 +1,8 @@
+# kspon_data_prep2.sh
+> kspon test set을 만들기 위한 코드
+> **run_kspon과 같이 사용**
+
+```shell
 #!/bin/bash
 # Copyright 2019   hwiorn <hwiorn@gmail.com>
 # Apache 2.0.
@@ -129,3 +134,4 @@ utils/validate_data_dir.sh --no-feats $dst || exit 1;
 
 echo $0: done
 exit 0
+```

@@ -14,10 +14,10 @@ import csv
 
 
 # 기쁨 불안 당황 슬픔 분노 상처
-# 평서문, 불안, 당황
-# 기쁨, 
-# 분노, 상처
-# 슬픔
+# 0: 평서문, 불안, 당황
+# 1: 기쁨, 
+# 2: 분노, 상처
+# 3: 슬픔
 lenOfRow = len(df)
 
 with open('{0}{1}{2}.csv'.format(dataPath, fname, fnameOut), 'w', newline='', encoding='utf8') as f: 
@@ -66,9 +66,3 @@ with open('{0}{1}{2}.csv'.format(dataPath, fname, fnameOut), 'w', newline='', en
 
 
 
-'''
-"나, ' 제거과정 필수
-"불안 ," 을 "불안,"으로 바꿔줘야함
-csv to tsv
-
-'''
