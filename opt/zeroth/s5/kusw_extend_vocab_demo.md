@@ -102,9 +102,10 @@
 ```shell
 #!/usr/bin/env bash
 
+# Copyright  2021 Konkuk Univ. (Chanhyun Lee)
+# Apache 2.0
 
 # top과 관련된 words.txt 등의 파일들은 data/lang에 있다고 생각하고 코드 시작
-
 # 결국 top HCLG를 가져올때, 기존의 것을 이용하는것이 아닌 L.fst G.fst를 새롭게 nonterminal 토큰을 추가하여 제작한 뒤, HCLG로 만들어줘야함
 
 stage=0
@@ -116,6 +117,13 @@ set -e
 tree_dir=exp/chain_rvb/tree_a  # AM model이 있는 경로
 lang_base=data/lang_nosp_basevocab
 lang_ext=data/lang_nosp_extvocab
+
+
+# prefix 변수 정하기 (default = zeroth)
+# tgmed small 크기를 정하는 변수 정하기
+# 파일(lexicon, rvb, tgsmall.ARPA) 있는지 체크하는 메세지 추가하기
+# 경로에 다른 파일이 있는 경우 강제로 쓰게하는 모드 추가
+
 
 if [ $stage -le 0 ]; then
     cp -r data/local/dict_nosp data/local/dict_nosp_basevocab
@@ -133,11 +141,11 @@ if [ $stage -le 1 ]; then
 
   #@ LM 경로 설정
   # $lang_base에 G.fst 생성
-  gunzip -c  data/local/lm/lm_tgsmall.arpa.gz | \
-    sed 's/<UNK>/#nonterm:unk/g' | \
-    arpa2fst --disambig-symbol=#0 \
-             --read-symbol-table=$lang_base/words.txt - | \
-    fstrmsymbols --remove-from-output=true "echo $nonterm_unk|" - $lang_base/G.fst
+    gunzip -c  data/local/lm/zeroth.lm.tgmed.arpa.gz | \
+     sed 's/<UNK>/#nonterm:unk/g' | \
+     arpa2fst --disambig-symbol=#0 \
+              --read-symbol-table=$lang_base/words.txt - | \
+     fstrmsymbols --remove-from-output=true "echo $nonterm_unk|" - $lang_base/G.fst
 fi
 
 
@@ -146,7 +154,7 @@ if [ $stage -le 2 ]; then
   # <lang_base>: L.fst, G.fst가 있는 경로
   # <tree_dir>: AM모델이 있는 곳
   # <tree_dir/extvocab_nosp_top>: HCLG.fst 가 저장될 폴더
-  utils/mkgraph.sh --self-loop-scale 1.0 $lang_base $tree_dir $tree_dir/extvocab_nosp_top
+    utils/mkgraph.sh --self-loop-scale 1.0 $lang_base $tree_dir $tree_dir/extvocab_nosp_top
 fi
 
 if [ $stage -le 3 ]; then
@@ -156,24 +164,24 @@ if [ $stage -le 3 ]; then
 
   # 기존 words.txt에 없는 단어를 추출하여
   # $tree_dir/extvocab_nosp_lexicon/words에 저장
-  awk -v w=data/lang/words.txt 'BEGIN{while(getline <w) seen[$1] = $1} {for(n=2;n<=NF;n++) if(!($n in seen)) oov[$n] = 1}
-                                END{ for(k in oov) print k;}' < data/train_30k_hires/text > $tree_dir/extvocab_nosp_lexicon/words
+    awk -v w=data/lang/words.txt 'BEGIN{while(getline <w) seen[$1] = $1} {for(n=2;n<=NF;n++) if(!($n in seen)) oov[$n] = 1}
+                                    END{ for(k in oov) print k;}' < data/train_30k_hires/text > $tree_dir/extvocab_nosp_lexicon/words
 
-  if $run_g2p; then
-    echo "$0: generating g2p entries for $(wc -l <$tree_dir/extvocab_nosp_lexicon/words) words"
-    steps/dict/apply_g2p.sh $tree_dir/extvocab_nosp_lexicon/words $tree_dir/extvocab_nosp_g2p  $tree_dir/extvocab_nosp_lexicon
-  else
+    if $run_g2p; then
+        echo "$0: generating g2p entries for $(wc -l <$tree_dir/extvocab_nosp_lexicon/words) words"
+        steps/dict/apply_g2p.sh $tree_dir/extvocab_nosp_lexicon/words $tree_dir/extvocab_nosp_g2p  $tree_dir/extvocab_nosp_lexicon
+    else
 
 
     # data/local/lm/run_task.sh를 실행하면 생기는 lexicon 파일
-    if [ ! -f data/local/lm/buildLM/_corpus_task_/morfessor.model.txt ]; then
-      echo "Please build new Lexicon at data/local/lm/buildLM/_corpus_task_/morfessor.model.txt"
-      exit 1;
+    if [ ! -f data/local/lm/buildLM/_corpus_task_/lexicon ]; then
+        echo "Please build new Lexicon at data/local/lm/buildLM/_corpus_task_/lexicon"
+        exit 1;
     fi
     
     # new lexicon에서 zeroth_lexicon에 없는 단어만 추가
     echo "**Creating Exclusive New Lexicon from data/local/lm/zeroth_lexicon data/local/lm/buildLM/_corpus_task_/morfessor.model.txt to $lang_ext/lexicon.txt"
-    utils/filter_scp.pl --exclude data/local/lm/zeroth_lexicon data/local/lm/buildLM/_corpus_task_/morfessor.model.txt > $tree_dir/extvocab_nosp_lexicon/lexicon.txt
+    utils/filter_scp.pl --exclude data/local/lm/zeroth_lexicon data/local/lm/buildLM/_corpus_task_/lexicon > $tree_dir/extvocab_nosp_lexicon/lexicon.txt
     
     echo "**Creating $tree_dir/extvocab_nosp_lexicon/lexiconp.txt from $tree_dir/extvocab_nosp_lexicon/lexicon.txt"
     perl -ape 's/(\S+\s+)(.+)/${1}1.0\t$2/;' < $tree_dir/extvocab_nosp_lexicon/lexicon.txt > $tree_dir/extvocab_nosp_lexicon/lexiconp.txt
@@ -181,8 +189,8 @@ if [ $stage -le 3 ]; then
   fi
 
   # 기존의 L.fst와 새로운 lexiconp를 가지고 extend_lang.sh 를 통해 새로운 L.fst, words 제작
-  [ -f $lang_ext/G.fst ] && rm $lang_ext/G.fst
-  utils/lang/extend_lang.sh  data/lang_nosp_basevocab $tree_dir/extvocab_nosp_lexicon/lexiconp.txt $lang_ext
+    [ -f $lang_ext/G.fst ] && rm $lang_ext/G.fst
+    utils/lang/extend_lang.sh  data/lang_nosp_basevocab $tree_dir/extvocab_nosp_lexicon/lexiconp.txt $lang_ext
 fi
 
 
@@ -194,35 +202,35 @@ if [ $stage -le 4 ]; then
 2    3    #nonterm_end <eps>
 3
 EOF
-  lexicon=$tree_dir/extvocab_nosp_lexicon/lexiconp.txt
-  num_words=$(wc -l <$lexicon)
-  cost=$(perl -e "print log($num_words)");
-  awk -v cost=$cost '{print 1, 2, $1, $1, cost}' <$lexicon >>$lang_ext/G.txt
-  fstcompile --isymbols=$lang_ext/words.txt --osymbols=$lang_ext/words.txt <$lang_ext/G.txt | \
+    lexicon=$tree_dir/extvocab_nosp_lexicon/lexiconp.txt
+    num_words=$(wc -l <$lexicon)
+    cost=$(perl -e "print log($num_words)");
+    awk -v cost=$cost '{print 1, 2, $1, $1, cost}' <$lexicon >>$lang_ext/G.txt
+    fstcompile --isymbols=$lang_ext/words.txt --osymbols=$lang_ext/words.txt <$lang_ext/G.txt | \
     fstarcsort --sort_type=ilabel >$lang_ext/G.fst
 fi
 
 
 if [ $stage -le 5 ]; then
   # tree_dir로 되어있는 부분을 우리가 기존에 가지고있는 AM 위치로 엮어줘야함 (exp/chain_rvb/tree_a)
-  utils/mkgraph.sh --self-loop-scale 1.0 $lang_ext $tree_dir $tree_dir/extvocab_nosp_part
+    utils/mkgraph.sh --self-loop-scale 1.0 $lang_ext $tree_dir $tree_dir/extvocab_nosp_part
 fi
 
 if [ $stage -le 6 ]; then
-  offset=$(grep nonterm_bos $lang_ext/phones.txt | awk '{print $2}')
-  nonterm_unk=$(grep nonterm:unk $lang_ext/phones.txt | awk '{print $2}')
+    offset=$(grep nonterm_bos $lang_ext/phones.txt | awk '{print $2}')
+    nonterm_unk=$(grep nonterm:unk $lang_ext/phones.txt | awk '{print $2}')
 
-  mkdir -p $tree_dir/extvocab_nosp_combined
-  [ -d $tree_dir/extvocab_nosp_combined/phones ] && rm -r $tree_dir/extvocab_nosp_combined/phones
+    mkdir -p $tree_dir/extvocab_nosp_combined
+    [ -d $tree_dir/extvocab_nosp_combined/phones ] && rm -r $tree_dir/extvocab_nosp_combined/phones
   
   # 디코딩 스크립트는 words.txt 및phones/를 예상하고 적절한 값을 가질 extvocab_part 그래프 디렉토리에서 복사합니다.
-  cp -r $tree_dir/extvocab_nosp_part/{words.txt,phones.txt,phones/} $tree_dir/extvocab_nosp_combined
+    cp -r $tree_dir/extvocab_nosp_part/{words.txt,phones.txt,phones/} $tree_dir/extvocab_nosp_combined
 
   # 다음은 --write-as-grammar=false로 인해 일반 디코더에서 디코딩할 수 있는 FST로 컴파일됩니다.
-  make-grammar-fst --write-as-grammar=false --nonterm-phones-offset=$offset\
-	$tree_dir/extvocab_nosp_top/HCLG.fst \
-	$nonterm_unk $tree_dir/extvocab_nosp_part/HCLG.fst \
-	$tree_dir/extvocab_nosp_combined/HCLG.fst
+    make-grammar-fst --write-as-grammar=false --nonterm-phones-offset=$offset\
+    	$tree_dir/extvocab_nosp_top/HCLG.fst \
+    	$nonterm_unk $tree_dir/extvocab_nosp_part/HCLG.fst \
+    	$tree_dir/extvocab_nosp_combined/HCLG.fst
 fi
 ```
 
