@@ -81,7 +81,7 @@ def receive(socket):
                 chat_log['state'] = 'normal'
                 if flag == 1:
                     print("flag 1")
-                    chat_log.insert("end",'점주' + '\n')
+                    chat_log.insert(str(chat_cnt) + ".0",'점주' + '\n')
                     chat_log.tag_add(str(chat_cnt) + 'C', str(chat_cnt) + ".0", str(chat_cnt) + ".end")
                     chat_log.tag_config(str(chat_cnt) + 'C', foreground="black", font=("Arial", 8, "bold"))
                     chat_cnt = chat_cnt + 1
@@ -100,7 +100,7 @@ def receive(socket):
                         chat_log.tag_config(chat_number[index_num], foreground="red", font=("Arial", 14, "bold"))
                     flag = 0
                 else :
-                    chat_log.insert("end",str(data[data.find('}') + 1:]) + ' ')
+                    chat_log.insert(str(chat_cnt) + ".end",str(data[data.find('}') + 1:]) + ' ')
                     if tag_flag == 0:
                         print("flag 0 tag_flag 0")
                         chat_log.tag_add(chat_number[index_num], str(chat_number[index_num]) + ".0", str(chat_number[index_num]) + ".end")
@@ -130,6 +130,8 @@ def receive(socket):
                 print(chat_cnt)
                 chat_log['state'] = 'disabled'
             elif data[0]=='C' or data[0]=='D':
+                if data[0]=='C': print('C')
+                if data[0]=='D': print('D')
                 index_num = int(data[data.find('{') + 1:data.find('}')])
                 chat_log['state'] = 'normal'
                 chat_log.delete(str(chat_number[index_num])+".0",str(chat_number[index_num])+".end")
