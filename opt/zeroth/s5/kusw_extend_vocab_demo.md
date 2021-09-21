@@ -8,9 +8,11 @@
 > - zeroth morfessor segment를 업데이트해가며 run_kspon같은곳에서 사용
 
 
+> 아 일단 arpa파일 옮겨야함 114에서 192로
+
 ### data/lang
 
-> 원본파일(L.fst, G.fst, lexicon, words 등등…)
+> 원본파일(L.fst, ~G.fst~(이건 원래 없음), lexicon, words 등등…)
 
 
 
@@ -148,6 +150,7 @@ if [ $stage -le 0 ]; then
 fi
 
 if [ $stage -le 1 ]; then
+    echo
     # buildNGRAM_task.sh을 이용하여 pruning 진행하고 해당 pruning arpa.gz파일을 이용하여 밑의 Stage 1에서 G.fst로 만들수 있게도 설정하면 좋을듯
 fi
 

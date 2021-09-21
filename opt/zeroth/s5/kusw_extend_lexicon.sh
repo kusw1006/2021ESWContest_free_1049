@@ -105,9 +105,9 @@ fi
 
 if [ $resegment == "True" ]; then
     startTime=$(date +'%F-%H-%M')
-    echo $0: "Re-segment transcripts" $startTime
+    echo $0: "Re-segment transcripts started at " $startTime
 
-    if ! exists morfessor; then
+    if [ ! exists morfessor ]; then
         echo "Morfessor is not installed, so install it"
         wd=`pwd`
         cd $KALDI_ROOT/tools
@@ -128,9 +128,9 @@ if [ $resegment == "True" ]; then
         --output-format '{analysis} ' --output-newlines \
         --nosplit-re '[0-9\[\]\(\){}a-zA-Z&.,\-]+' > $trans
     
-    $trans".old"
+    # rm $trans".old"
     finishTime=$(date +'%F-%H-%M')
-    echo $0: "Re-segment transcripts" $finishTime
+    echo $0: "Re-segment transcripts finished at " $finishTime
 fi
 
 
