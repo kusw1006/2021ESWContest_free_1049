@@ -189,15 +189,12 @@ if [ $stage -le 3 ]; then
     else
 
 
-    # data/local/lm/run_task.sh를 실행하면 생기는 lexicon 파일
-    if [ ! -f data/local/lm/buildLM/_corpus_task_/lexicon ]; then
-        echo "Please build new Lexicon at data/local/lm/buildLM/_corpus_task_/lexicon"
-        exit 1;
-    fi
+    # data/local/lm/buildLM/_corpus_task/에 ksponcorpus.txt가 있다고 생각하고 진행
+    local/kusw_extend_vocab_lexicon.sh $tree_dir/extvocab_nosp_lexicon #여기에 extra_lexicon 생성됨
     
     # new lexicon에서 zeroth_lexicon에 없는 단어만 추가
     echo "**Creating Exclusive New Lexicon from data/local/lm/zeroth_lexicon data/local/lm/buildLM/_corpus_task_/morfessor.model.txt to $lang_ext/lexicon.txt"
-    utils/filter_scp.pl --exclude data/local/lm/zeroth_lexicon data/local/lm/buildLM/_corpus_task_/lexicon > $tree_dir/extvocab_nosp_lexicon/lexicon.txt
+    utils/filter_scp.pl --exclude data/local/lm/zeroth_lexicon $tree_dir/extvocab_nosp_lexicon/extra_lexicon > $tree_dir/extvocab_nosp_lexicon/lexicon.txt
     
     echo "**Creating $tree_dir/extvocab_nosp_lexicon/lexiconp.txt from $tree_dir/extvocab_nosp_lexicon/lexicon.txt"
     perl -ape 's/(\S+\s+)(.+)/${1}1.0\t$2/;' < $tree_dir/extvocab_nosp_lexicon/lexicon.txt > $tree_dir/extvocab_nosp_lexicon/lexiconp.txt

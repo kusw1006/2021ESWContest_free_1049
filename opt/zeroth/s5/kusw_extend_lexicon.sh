@@ -4,7 +4,7 @@
 # Copyright 2021 Chanhyun Lee (Konkuk Univ.)
 # Apache 2.0
 
-resegment="False"
+resegment="True"
 
 . ./cmd.sh
 . ./path.sh
@@ -32,6 +32,10 @@ if [ ! -f $script_dir/cmudict-0.7b.txt ]; then
 	exit 1
 fi
 
+if [ ! -f $txt ]; then
+    echo $0: No such $txt file
+    exit 1
+fi
 
 if [ ! -f $rectTxt ]; then
     startTime=$(date +'%F-%H-%M')
@@ -117,16 +121,19 @@ if [ $resegment == "True" ]; then
         echo "$rectTxt is not found"
         exit 1
     fi
-
-    cat $trans |\
+    cp -f $trans $trans".old"
+    cat $trans".old" |\
         sed -E 's/\s+/ /g; s/^\s//g; s/\s$//g' |\
         morfessor -l $lm_dir/zeroth_morfessor.seg -T - -o - \
         --output-format '{analysis} ' --output-newlines \
-        --nosplit-re '[0-9\[\]\(\){}a-zA-Z&.,\-]+'
-
+        --nosplit-re '[0-9\[\]\(\){}a-zA-Z&.,\-]+' > $trans
+    
+    $trans".old"
     finishTime=$(date +'%F-%H-%M')
     echo $0: "Re-segment transcripts" $finishTime
 fi
+
+
 
 startTime=$(date +'%F-%H-%M')
 echo $0: "2차 분류 시작" $startTime
@@ -159,16 +166,18 @@ env LC_ALL=en_US.UTF-8 $script_dir/genPronunciation.py $dst/tmp > $dst/tmp2
 awk -F'\t' '{if(NF>1){print $0}}' $dst/tmp2 > $dst/uniqWords.nonhangul.sorted.pron
 awk -F'\t' '{if(NF<2){print $0}}' $dst/tmp2 > $dst/noPronList
 noPronCount=$(wc -l <$dst/noPronList)
-if [ $noPronCount -ne 0 ]; then
-        echo $0: There exist morphemes without pronunciation, plz check noPronList: $noPronCount
-        head $dst/noPronList
-        echo "... (omitted) ..."
-        rm -f $dst/noPronList
-        exit 1
-fi
+# if [ $noPronCount -ne 0 ]; then
+#         echo $0: There exist morphemes without pronunciation, plz check noPronList: $noPronCount
+#         head $dst/noPronList
+#         echo "... (omitted) ..."
+#         rm -f $dst/noPronList
+#         exit 1
+# fi
 
 echo $0: Generating pronunciation
-cat $dst/uniqWords.nonhangul.sorted.pron $dst/uniqWords.hangul > $dst/finalList
+# #@@이거랑 위의 if문이랑 세트
+#cat $dst/uniqWords.nonhangul.sorted.pron $dst/uniqWords.hangul > $dst/finalList
+cat $dst/uniqWords.hangul > $dst/finalList
 
 # genPhoneSeq.py에서 finalList를 가지고 dic.pronun생성
 env LC_ALL=en_US.UTF-8 $script_dir/genPhoneSeq.py $dst/finalList
@@ -181,7 +190,7 @@ mv -f dic.pronun $dst/dic.pronun
 [ ! -s $dst/noPronList ] && rm -f $dst/noPronList
 [ ! -s $dst/extra_lexicon ] && rm -f $dst/extra_lexicon
 
-#rm -f $rectTxt.tmp* $dst/tmp* $dst/*.tmp* $dst/uniqWords.* $dst/{dic.pronun,finalList,pronoun.dict}
+# rm -f $rectTxt.tmp* $dst/tmp* $dst/*.tmp* $dst/uniqWords.* $dst/{dic.pronun,finalList,pronoun.dict}
 
 finishTime=$(date +'%F-%H-%M')
 echo $0: "2차 분류 완료" $finishTime

@@ -66,16 +66,20 @@ env LC_ALL=en_US.UTF-8 $script_dir/genPronunciation.py $data_dir/tmp > $data_dir
 awk -F'\t' '{if(NF>1){print $0}}' $data_dir/tmp2 > $data_dir/uniqWords.nonhangul.sorted.pron
 awk -F'\t' '{if(NF<2){print $0}}' $data_dir/tmp2 > $data_dir/noPronList
 noPronCount=$(wc -l <$data_dir/noPronList)
-if [ $noPronCount -ne 0 ]; then
-        echo $0: There exist morphemes without pronunciation, plz check noPronList: $noPronCount
-        head $data_dir/noPronList
-        echo "... (omitted) ..."
-        #rm -f $data_dir/noPronList
-        #exit 1
-fi
+# if [ $noPronCount -ne 0 ]; then
+#         echo $0: There exist morphemes without pronunciation, plz check noPronList: $noPronCount
+#         head $data_dir/noPronList
+#         echo "... (omitted) ..."
+#         #rm -f $data_dir/noPronList
+#         #exit 1
+# fi
 
 echo $0: Generating pronunciation
-cat $data_dir/uniqWords.nonhangul.sorted.pron $data_dir/uniqWords.hangul > $data_dir/finalList
+# 1차적으로 genPronunciation_cmu에 0.7b.txt의 경로가 잘못 들어가있어서 오류남
+# 오류가 해결되었더니 특수문자가 들어가 발음 생성 불가 오류 발생
+# 따라서 nonhangul list는 안넣는걸로 수정
+#cat $data_dir/uniqWords.nonhangul.sorted.pron $data_dir/uniqWords.hangul > $data_dir/finalList
+cat $data_dir/uniqWords.hangul > $data_dir/finalList
 # genPhoneSeq.py에서 finalList를 가지고 dic.pronun생성
 env LC_ALL=en_US.UTF-8 $script_dir/genPhoneSeq.py $data_dir/finalList
 
