@@ -1,5 +1,13 @@
 ## 원본
 
+### 핵심
+
+> 원본 arpa 파일과 data/lang에 몇가지만 준비되어 있으면 됨 (L.fst, G.fst 필요함)
+> HCLG 완성된거 갖다 쓰면 안됨 (nonterm unk 기호가 없음)
+> 새로운 arpa파일은 전혀 필요없음
+> - zeroth morfessor segment를 업데이트해가며 run_kspon같은곳에서 사용
+
+
 ### data/lang
 
 > 원본파일(L.fst, G.fst, lexicon, words 등등…)
@@ -124,6 +132,9 @@ lang_ext=data/lang_nosp_extvocab
 # 파일(lexicon, rvb, tgsmall.ARPA) 있는지 체크하는 메세지 추가하기
 # 경로에 다른 파일이 있는 경우 강제로 쓰게하는 모드 추가
 
+rm -r $langbase
+
+# data/lang으로 부터 L을 가져와서 변형 후 prepare_lang으로 부산물 생성하여 data/lang_nosp_basevocab에 저장
 
 if [ $stage -le 0 ]; then
     cp -r data/local/dict_nosp data/local/dict_nosp_basevocab
@@ -137,11 +148,16 @@ if [ $stage -le 0 ]; then
 fi
 
 if [ $stage -le 1 ]; then
-  nonterm_unk=$(grep '#nonterm:unk' $lang_base/words.txt | awk '{print $2}')
+    # buildNGRAM_task.sh을 이용하여 pruning 진행하고 해당 pruning arpa.gz파일을 이용하여 밑의 Stage 1에서 G.fst로 만들수 있게도 설정하면 좋을듯
+fi
 
-  #@ LM 경로 설정
-  # $lang_base에 G.fst 생성
-    gunzip -c  data/local/lm/zeroth.lm.tgmed.arpa.gz | \
+# 기존 arpa.gz 파일을 이용. nonterm_unk 심볼을 추가하여 G.fst로 제작하여 data/lang_nosp_basevocab에 저장
+if [ $stage -le 1 ]; then
+    nonterm_unk=$(grep '#nonterm:unk' $lang_base/words.txt | awk '{print $2}')
+
+    #@ LM 경로 설정
+    # $lang_base에 G.fst 생성
+    gunzip -c  data/local/lm/zeroth.lm.fgmed.arpa.gz | \
      sed 's/<UNK>/#nonterm:unk/g' | \
      arpa2fst --disambig-symbol=#0 \
               --read-symbol-table=$lang_base/words.txt - | \
@@ -159,13 +175,13 @@ fi
 
 if [ $stage -le 3 ]; then
 
-  # # AM 모델이 있는 폴더에 ./extvocab_nosp_lexicon 폴더 생성
-  # mkdir -p $tree_dir/extvocab_nosp_lexicon
+    # # AM 모델이 있는 폴더에 ./extvocab_nosp_lexicon 폴더 생성
+    # mkdir -p $tree_dir/extvocab_nosp_lexicon
 
-  # 기존 words.txt에 없는 단어를 추출하여
-  # $tree_dir/extvocab_nosp_lexicon/words에 저장
+    # 기존 words.txt에 없는 단어를 추출하여
+    # $tree_dir/extvocab_nosp_lexicon/words에 저장
     awk -v w=data/lang/words.txt 'BEGIN{while(getline <w) seen[$1] = $1} {for(n=2;n<=NF;n++) if(!($n in seen)) oov[$n] = 1}
-                                    END{ for(k in oov) print k;}' < data/train_30k_hires/text > $tree_dir/extvocab_nosp_lexicon/words
+                                    END{ for(k in oov) print k;}' < data/train_60k_hires/text > $tree_dir/extvocab_nosp_lexicon/words
 
     if $run_g2p; then
         echo "$0: generating g2p entries for $(wc -l <$tree_dir/extvocab_nosp_lexicon/words) words"
@@ -186,9 +202,9 @@ if [ $stage -le 3 ]; then
     echo "**Creating $tree_dir/extvocab_nosp_lexicon/lexiconp.txt from $tree_dir/extvocab_nosp_lexicon/lexicon.txt"
     perl -ape 's/(\S+\s+)(.+)/${1}1.0\t$2/;' < $tree_dir/extvocab_nosp_lexicon/lexicon.txt > $tree_dir/extvocab_nosp_lexicon/lexiconp.txt
   
-  fi
+    fi
 
-  # 기존의 L.fst와 새로운 lexiconp를 가지고 extend_lang.sh 를 통해 새로운 L.fst, words 제작
+    # 기존의 L.fst와 새로운 lexiconp를 가지고 extend_lang.sh 를 통해 새로운 L.fst, words 제작
     [ -f $lang_ext/G.fst ] && rm $lang_ext/G.fst
     utils/lang/extend_lang.sh  data/lang_nosp_basevocab $tree_dir/extvocab_nosp_lexicon/lexiconp.txt $lang_ext
 fi
@@ -197,7 +213,7 @@ fi
 if [ $stage -le 4 ]; then
   # 추가 단어에 대해 G.fst를 만듦
   # 모두에게 동일한 확률을 할당하며, 단어는 모두 상태 1에서 2로 전환됨
-  cat <<EOF > $lang_ext/G.txt
+    cat <<EOF > $lang_ext/G.txt
 0    1    #nonterm_begin <eps>
 2    3    #nonterm_end <eps>
 3
