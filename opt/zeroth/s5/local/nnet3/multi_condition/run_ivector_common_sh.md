@@ -382,6 +382,8 @@ if [ $stage -le 3 ]; then
   done
   mkdir -p data/${trainset}_rvb${num_data_reps}
   utils/combine_data.sh data/${trainset}_rvb${num_data_reps} $dirs
+  utils/validate_data_dir.sh --no-feats data/${trainset}_rvb${num_data_reps}
+
   ###
 
   utils/copy_data_dir.sh data/${trainset}_rvb${num_data_reps} data/${trainset}_rvb${num_data_reps}_hires
@@ -422,12 +424,13 @@ if [ $stage -le 3 ]; then
     cp ${gmmdir}_ali_${trainset}/phones.txt  ${gmmdir}_ali_${trainset}_temp_$i/ || exit 1;
   done
   steps/combine_ali_dirs.sh data/${trainset}_rvb${num_data_reps} ${gmmdir}_ali_${trainset}_rvb $ali_dirs || exit 1;
+  utils/validate_data_dir.sh --no-feats data/${trainset}_rvb${num_data_reps}
 
   # We need to build a small system just because we need the LDA+MLLT transform
   # to train the diag-UBM on top of.  We align a subset of training data for
   # this purpose.
-  utils/subset_data_dir.sh data/${trainset}_rvb${num_data_reps}_hires 100000 data/train_100k_hires
-  utils/subset_data_dir.sh data/${trainset}_rvb${num_data_reps}_hires 30000 data/train_30k_hires
+  utils/subset_data_dir.sh data/${trainset}_rvb${num_data_reps}_hires 200000 data/train_200k_hires
+  utils/subset_data_dir.sh data/${trainset}_rvb${num_data_reps}_hires 60000 data/train_60k_hires
 fi
 
 
@@ -441,7 +444,7 @@ if [ $stage -le 4 ]; then
   steps/train_lda_mllt.sh --cmd "$train_cmd" --num-iters 13 \
     --realign-iters "" \
     --splice-opts "--left-context=3 --right-context=3" \
-    3000 10000 data/train_100k_hires data/lang_nosp \
+    3000 10000 data/train_200k_hires data/lang_nosp \
     ${gmmdir}_ali_${trainset}_rvb exp/nnet3${rvb_affix}/tri2b
 fi
 
@@ -450,7 +453,7 @@ if [ $stage -le 5 ]; then
   # To train a diagonal UBM we don't need very much data, so use a small subset
   # (actually, it's not that small: still around 100 hours).
   steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj $nj --num_threads $maxThread --num-frames 700000 \
-    data/train_30k_hires 512 exp/nnet3${rvb_affix}/tri2b exp/nnet3${rvb_affix}/diag_ubm
+    data/train_60k_hires 512 exp/nnet3${rvb_affix}/tri2b exp/nnet3${rvb_affix}/diag_ubm
 fi
 
 if [ $stage -le 6 ]; then

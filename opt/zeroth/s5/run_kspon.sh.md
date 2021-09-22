@@ -60,11 +60,12 @@ for part in train_data_01 test_data_01; do
 done
 
 # Prepare aihub-kspon dataset
-local/kspon_data_prep.sh --nj $nCPU $kspon_data data/kspon
+local/kspon_data_prep.sh --nj $nCPU $kspon_data data/kspon_train
+local/kspon_data_prep2.sh --nj $nCPU $kspon_data data/kspon_test
 
 # update segmentation of transcripts
 :>data/local/lm/extra_lexicon
-for part in train_data_01 test_data_01 kspon; do
+for part in train_data_01 test_data_01 kspon_train kspon_test; do
 	local/updateSegmentation.sh data/$part data/local/lm
 	local/generateExtraLexicon.sh data/$part data/local/lm
 
@@ -80,7 +81,6 @@ local/prepare_dict.sh data/local/lm data/local/dict_nosp
 utils/prepare_lang.sh data/local/dict_nosp \
 	"<UNK>" data/local/lang_tmp_nosp data/lang_nosp
 
-# G.fst 제작
 local/format_lms.sh --src-dir data/lang_nosp data/local/lm
 
 # Create ConstArpaLm format language model for full 3-gram and 4-gram LMs
@@ -100,17 +100,17 @@ if [[ ! -z $(echo $hostInAtlas | grep -o $(hostname -f)) ]]; then
   utils/create_split_dir.pl /mnt/{ares,hephaestus,jupiter,neptune}/$USER/kaldi-data/zeroth-kaldi/s5/$mfcc/storage \
     $mfccdir/storage
 fi
-for part in train_data_01 test_data_01 kspon; do
+for part in train_data_01 test_data_01 kspon_train kspon_test; do
 	steps/make_mfcc.sh --cmd "$train_cmd" --nj $nCPU data/$part exp/make_mfcc/$part $mfccdir
 	steps/compute_cmvn_stats.sh data/$part exp/make_mfcc/$part $mfccdir
 done
 
 # ... and then combine data sets into one (for later extension)
 utils/combine_data.sh \
-  data/train_clean data/train_data_01 data/kspon
+  data/train_clean data/train_data_01 data/kspon_train
 
 utils/combine_data.sh \
-  data/test_clean data/test_data_01
+  data/test_clean data/test_data_01 data/kspon_test
 
 # Make some small data subsets for early system-build stages.
 utils/subset_data_dir.sh --shortest data/train_clean 2000 data/train_2kshort

@@ -1,0 +1,9 @@
+gluonnlp
+numpy
+tqdm
+mxnet
+sentencepiece
+transformers
+pandas
+torch
+pip install git+https://git@github.com/SKTBrain/KoBERT.git@master
