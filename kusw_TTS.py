@@ -22,30 +22,38 @@ def recv(client_sock):
     id = 0
     while True:
         #fp = open("./01.wav", 'ab')
-        recv = client_sock.recv(1024)  
+        
+        recv_wav = client_sock.recv(1024)  
+        if len(recv_wav):
+            # if id == 0:
+            # print(recv_wav)
+            write_to_fp(fp, recv_wav)
+            print(len(recv_wav),len(fp.read()))
+            print("asdf")
+            if len(recv_wav) > 1 and len(recv_wav) < 1024:
+                fp.seek(0)
+                song = AudioSegment.from_wav(fp)
+                print("PPPPPPPPPPPPPPPPPPPPlayyyyy")
+                play(song)
 
-        if len(recv):
-            if id == 0:
-                print(recv)
-            write_to_fp(fp, recv)
-
-            print(len(recv),len(fp.read()))
-            id += 1
-
-        if len(recv) > 1 and len(recv) < 1024 and id > 8:       
-
-            print("aaa",len(recv),len(fp.read()))
-
-            print(fp.read())
-
+                print("aaa",len(recv_wav),len(fp.read()))
+        
+         
             
 
-        if len(recv) > 1 and len(recv) < 1000:
-            fp.seek(0)
-            song = AudioSegment.from_wav(fp)
-            print("PPPPPPPPPPPPPPPPPPPPlayyyyy")
-            play(song)
+            # print(fp.read())
+        
+            
 
+        # if len(recv_wav) > 1 and len(recv_wav) < 1000:
+        #     fp.seek(0)
+        #     song = AudioSegment.from_wav(fp)
+        #     print("PPPPPPPPPPPPPPPPPPPPlayyyyy")
+        #     play(song)
+
+        # if str(recv_wav).find("END"):
+        #     print("end")
+            # print(str(recv_wav))
 
 #-------------이부분만 반복--------------#
 
