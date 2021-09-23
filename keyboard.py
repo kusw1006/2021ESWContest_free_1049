@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+for #!/usr/bin/python3
 from hangul_utils import join_jamos
 import sys
 
