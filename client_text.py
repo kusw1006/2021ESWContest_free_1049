@@ -179,8 +179,12 @@ def createNewWindow():
     wall_label_chat.place(x=0,y=0)
     
     photo = PhotoImage(file = "home.png")
-    btn = Button(c_root, image = photo, command=c_root.destroy)
+    btn = Button(c_root, image = photo, command=c_root.destroy, background="wheat1")
     btn.place(x=70,y=30)
+    
+    photo_menu = PhotoImage(file = "menu.png")
+    btn_menu = Button(c_root, image = photo_menu, background="wheat1")
+    btn_menu.place(x=890,y=30)
     
     scrollbar = Scrollbar(chat_frame) ; scrollbar.pack(side='right',fill='y')
     chat_log = Text(c_root, width = 100 , height = 24, state = 'disabled', yscrollcommand = scrollbar.set, padx = 6, pady = 6); chat_log.pack(side='left'); chat_log.place(x=100, y=150)
