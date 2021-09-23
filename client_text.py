@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding:utf-8 -*-
 #라즈베리파이 클라이언트 개발
 #실시간 수신 -> A{num}, 문장 끝 -> B{num}
 #리스코어 수신 -> C{num}
@@ -8,7 +10,7 @@ from _thread import *
 import threading
 from tkinter import *
 from time import sleep
-import pyaudio
+# import pyaudio
 
 chat_number = [0] #각 index id에 맞춘 줄을 기억하기 위한 리스트
 chat_cnt = 1 #줄 수를 count하는 변수
@@ -134,7 +136,7 @@ def receive(socket):
 
 def login():
     # 서버의 ip주소 및 포트
-    HOST = ip_entry.get(); PORT = int(port_entry.get())
+    HOST = '114.70.22.237'; PORT = int('5052')
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((HOST, PORT))
 
@@ -163,34 +165,80 @@ def set_go_send(event):
     global go_send
     go_send = True
 
+def createNewWindow():
+    root_x = app.winfo_rootx()
+    root_y = app.winfo_rooty()
+    c_root = Toplevel(app)
+    c_root.geometry("%dx%d+%d+%d" % (1012,787,0,0))
+    #c_root.wm_attributes("-topmost",1)
+    c_root.title('실시간 통화 동시 통역 채팅 프로그램')
+    c_root.resizable(False, False)
+    chat_frame = Frame(c_root)
+    wall_chat = PhotoImage(file = "chat.png")
+    wall_label_chat = Label(c_root, image = wall_chat)
+    wall_label_chat.place(x=0,y=0)
+    
+    photo = PhotoImage(file = "home.png")
+    btn = Button(c_root, image = photo, command=c_root.destroy)
+    btn.place(x=70,y=30)
+    
+    scrollbar = Scrollbar(chat_frame) ; scrollbar.pack(side='right',fill='y')
+    chat_log = Text(c_root, width = 100 , height = 24, state = 'disabled', yscrollcommand = scrollbar.set, padx = 6, pady = 6); chat_log.pack(side='left'); chat_log.place(x=100, y=150)
+    scrollbar['command'] = chat_log.yview
+    chat_frame.place(x=20, y=60)
+    message_input = Text(c_root, width = 45, height = 3, font=("나눔 고딕", 20, "bold"), foreground="seashell4") ; message_input.place(x=200,y = 647)
+    #send_button = Button(c_root, text = 'Send', command = lambda: set_go_send(None)); send_button.place(x=430, y=405)
+    message_input.bind("<Return>",set_go_send)
+    #close_button = Button(c_root,text='Close',command=exit); close_button.place(x=230, y = 660)
+    c_root.mainloop()
+
+def callback(event):
+    email = (email_input.get(1.0,"end")).rstrip()
+    password = (password_input.get(1.0,"end")).rstrip()
+    if(email == "vvs@konkuk.ac.kr" and password == "1234"):
+        createNewWindow()
+
 go_out, go_send = False, False
-c_root = Tk()
-c_root.geometry('500x500')
-c_root.title('Deep Listener Receiver')
-c_root.resizable(False, False)
+app = Tk()
+app.geometry("%dx%d+%d+%d" % (483,483,0,0))
+wall = PhotoImage(file = "base_image.png")
+wall_label = Label(app, image = wall)
+wall_label.place(x=0,y=0)
+app.resizable(False, False)
+app.title('Login')
+email_input = Text(app, width = 22, height = 1) ; email_input.place(x=180,y = 232)
+password_input = Text(app, width = 18, height = 1) ; password_input.place(x=210,y = 293)
+app.bind('<Return>', callback)
+button = Button(app, text="Login",command=createNewWindow)
+button.pack()
+
+#c_root = Tk()
+#c_root.geometry('500x500')
+#c_root.title('실시간 통화 동시 통역 채팅 프로그램')
+#c_root.resizable(False, False)
 
 ''' Top Menu '''
-Label(c_root, text = 'Server IP : ').place(x=20, y=20)
-Label(c_root, text = 'Port : ').place(x=250, y=20)
-ip_entry = Entry(c_root, width=14); ip_entry.place(x=83, y=21)
-ip_entry.insert(0,'114.70.22.237')
-port_entry = Entry(c_root, width=5); port_entry.place(x = 290, y=21)
-port_entry.insert(0,'5052')
-login_button = Button(c_root,text='Log In', command=try_login); login_button.place(x=350, y=18)
-logout_button = Button(c_root,text='Log Out',state = 'disabled', command = try_logout); logout_button.place(x=420, y=18)
+#Label(c_root, text = 'Server IP : ').place(x=20, y=20)
+#Label(c_root, text = 'Port : ').place(x=250, y=20)
+#ip_entry = Entry(c_root, width=14); ip_entry.place(x=83, y=21)
+#ip_entry.insert(0,'114.70.22.237')
+#port_entry = Entry(c_root, width=5); port_entry.place(x = 290, y=21)
+#port_entry.insert(0,'5052')
+#login_button = Button(app,text='Log In', command=try_login); login_button.place(x=350, y=18)
+#logout_button = Button(app,text='Log Out',state = 'disabled', command = try_logout); logout_button.place(x=420, y=18)
 
 ''' Middle Menu '''
-chat_frame = Frame(c_root)
-scrollbar = Scrollbar(chat_frame) ; scrollbar.pack(side='right',fill='y')
-chat_log = Text(chat_frame, width = 62, height = 24, state = 'disabled', yscrollcommand = scrollbar.set, padx = 6, pady = 6); chat_log.pack(side='left')#place(x=20, y=60)
-scrollbar['command'] = chat_log.yview
+#chat_frame = Frame(c_root)
+#scrollbar = Scrollbar(chat_frame) ; scrollbar.pack(side='right',fill='y')
+#chat_log = Text(chat_frame, width = 55 , height = 18, state = 'disabled', yscrollcommand = scrollbar.set, padx = 6, pady = 6); chat_log.pack(side='left')#place(x=20, y=60)
+#scrollbar['command'] = chat_log.yview
 #chat_log.image_create 이거 사용
-chat_frame.place(x=20, y=60)
-message_input = Text(c_root, width = 55, height = 4) ; message_input.place(x=20,y = 390)
-send_button = Button(c_root, text = 'Send', command = lambda: set_go_send(None)); send_button.place(x=430, y=405)
-message_input.bind("<Return>",set_go_send)
+#chat_frame.place(x=20, y=60)
+#message_input = Text(c_root, width = 45, height = 4) ; message_input.place(x=20,y = 390)
+#send_button = Button(c_root, text = 'Send', command = lambda: set_go_send(None)); send_button.place(x=430, y=405)
+#message_input.bind("<Return>",set_go_send)
 
 ''' Bottom Menu '''
-close_button = Button(c_root,text='Close',command=exit); close_button.place(x=200, y = 460)
+#close_button = Button(c_root,text='Close',command=exit); close_button.place(x=200, y = 460)
 
-c_root.mainloop()
+app.mainloop()
