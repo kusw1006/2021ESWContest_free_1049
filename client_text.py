@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding:utf-8 -*-
 #라즈베리파이 클라이언트 개발
 #실시간 수신 -> A{num}, 문장 끝 -> B{num}
 #리스코어 수신 -> C{num}
@@ -10,6 +8,9 @@ from _thread import *
 import threading
 from tkinter import *
 from time import sleep
+from hangul_utils import join_jamos
+import sys
+import os
 # import pyaudio
 
 chat_number = [0] #각 index id에 맞춘 줄을 기억하기 위한 리스트
@@ -18,8 +19,105 @@ flag = 1 #A값에서 제일 처음 들어온 변수인지 체크하는 플래그
 tag_flag = 0 #이전에 사용된 mark tag인지 확인하기 위한 플래그
 pre_index_num = 0 #이전 index_num을 기억하는 용도
 
+sen = []
+sens = ""
+stop_send = True
+sft = False
+
+chat_log = False
+message_input = False
+client_socket = False
+
+# 자음-초성/종성
+cons = {'r':'ㄱ', 'R':'ㄲ', 's':'ㄴ', 'S':'ㄴ', 'e':'ㄷ', 'E':'ㄸ', 'f':'ㄹ', 'F':'ㄹ', 'a':'ㅁ', 'A':'ㅁ', 'q':'ㅂ', 'Q':'ㅃ', 't':'ㅅ', 'T':'ㅆ',
+           'd':'ㅇ', 'D':'ㅇ', 'w':'ㅈ', 'W':'ㅉ', 'c':'ㅊ', 'C':'ㅊ', 'z':'ㅋ', 'Z':'ㅋ', 'x':'ㅌ', 'X':'ㅌ', 'V':'ㅍ', 'v':'ㅍ', 'G':'ㅎ', 'g':'ㅎ'}
+# 모음-중성
+vowels = {'k':'ㅏ', 'K':'ㅏ', 'o':'ㅐ', 'i':'ㅑ', 'O':'ㅒ', 'j':'ㅓ', 'J':'ㅓ', 'p':'ㅔ',
+        'u':'ㅕ', 'U':'ㅕ', 'P':'ㅖ', 'h':'ㅗ', 'H':'ㅗ', 'Hk':'ㅘ', 'hK':'ㅘ', 'HK':'ㅘ', 'hk':'ㅘ', 'ho':'ㅙ', 'Ho':'ㅙ', 'hO':'ㅙ', 'HO':'ㅙ', 
+        'hl':'ㅚ', 'Hl':'ㅚ', 'hL':'ㅚ', 'HL':'ㅚ', 'y':'ㅛ', 'Y':'ㅛ', 'n':'ㅜ', 'N':'ㅜ','nj':'ㅝ', 'Nj':'ㅝ', 'nJ':'ㅝ', 'NJ':'ㅝ', 'np':'ㅞ',
+        'Np':'ㅞ', 'nP':'ㅞ', 'NP':'ㅞ', 'nl':'ㅟ', 'Nl':'ㅟ', 'nL':'ㅟ', 'NL':'ㅟ', 'b':'ㅠ', 'B':'ㅠ', 'm':'ㅡ', 'M':'ㅡ', 'Ml':'ㅢ', "mL":'ㅢ', 
+        'ML':'ㅢ', 'ml':'ㅢ', 'l':'ㅣ', 'L':'l'}
+
+# 자음-종성
+cons_double = {'rt':'ㄳ', 'sw':'ㄵ', 'sg':'ㄶ', 'fr':'ㄺ', 'fa':'ㄻ', 'fq':'ㄼ', 'ft':'ㄽ', 'fx':'ㄾ', 'fv':'ㄿ', 'fg':'ㅀ', 'qt':'ㅄ'}
+
+def engkor(text):
+    result = ''   # 영 > 한 변환 결과
+    
+    # 1. 해당 글자가 자음인지 모음인지 확인
+    vc = '' 
+    for t in text:
+        if t in cons :
+            vc+='c'
+        elif t in vowels:
+            vc+='v'
+        else:
+            vc+='!'
+	
+    # cvv → fVV / cv → fv / cc → dd 
+    vc = vc.replace('cvv', 'fVV').replace('cv', 'fv').replace('cc', 'dd')
+	
+    
+    # 2. 자음 / 모음 / 두글자 자음 에서 검색
+    i = 0
+    while i < len(text):
+        v = vc[i]
+        t = text[i]
+
+        j = 1
+        # 한글일 경우
+        try:
+            if v == 'f' or v == 'c':   # 초성(f) & 자음(c) = 자음
+                result+=cons[t]
+
+            elif v == 'V':   # 더블 모음
+                result+=vowels[text[i:i+2]]
+                j+=1
+
+            elif v == 'v':   # 모음
+                result+=vowels[t]
+
+            elif v == 'd':   # 더블 자음
+                result+=cons_double[text[i:i+2]]
+                j+=1
+            else:
+                result+=t
+                
+        # 한글이 아닐 경우
+        except:
+            if v in cons:
+                result+=cons[t]
+            elif v in vowels:
+                result+=vowels[t]
+            else:
+                result+=t
+        
+        i += j
+
+
+    return join_jamos(result)
+    
+try:
+    # Linux & Mac 용 코드
+    import sys
+    import tty
+    import termios
+
+    def getkey():
+        """단일키 누르는 것을 받아옴"""
+        fd = sys.stdin.fileno()
+        original_attributes = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, original_attributes)
+        return ch
+except:
+    print("xxxx")
+
 def send(socket):
-    global go_send, chat_cnt
+    global go_send, chat_cnt, message_input, chat_log
     while True:
         if go_send:
             message = (message_input.get(1.0,"end")).rstrip() #입력 된 메세지 읽어오기
@@ -60,9 +158,165 @@ def send(socket):
                 socket.close()
                 exit()
             sleep(0.1)
+            
+def send_message(event):
+    global sen, sens, go_send, message_input, sft
+    print(2)
+    if sft:
+        try:
+            if stop_send:
+                socket.close()
+                exit()
+            #txt = getkey()
+            txt = event.keycode
+            print(txt)
+            if(txt == 22):
+                sen.pop()
+            elif(txt == 36):
+                go_send = True
+            elif(txt == 24):
+                sen.append('Q')
+            elif(txt == 25):
+                sen.append('W')
+            elif(txt == 26):
+                sen.append('E')
+            elif(txt == 27):
+                sen.append('R')
+            elif(txt == 28):
+                sen.append('T')
+            elif(txt == 29):
+                sen.append('Y')
+            elif(txt == 30):
+                sen.append('U')
+            elif(txt == 31):
+                sen.append('I')
+            elif(txt == 32):
+                sen.append('O')
+            elif(txt == 33):
+                sen.append('P')
+            elif(txt == 38):
+                sen.append('A')
+            elif(txt == 39):
+                sen.append('S')
+            elif(txt == 40):
+                sen.append('D')
+            elif(txt == 41):
+                sen.append('F')
+            elif(txt == 42):
+                sen.append('G')
+            elif(txt == 43):
+                sen.append('H')
+            elif(txt == 44):
+                sen.append('J')
+            elif(txt == 45):
+                sen.append('K')
+            elif(txt == 46):
+                sen.append('L')
+            elif(txt == 52):
+                sen.append('Z')
+            elif(txt == 53):
+                sen.append('X')
+            elif(txt == 54):
+                sen.append('C')
+            elif(txt == 55):
+                sen.append('V')
+            elif(txt == 56):
+                sen.append('B')
+            elif(txt == 57):
+                sen.append('N')
+            elif(txt == 58):
+                sen.append('M')
+            elif(txt == 65):
+                sen.append(' ')
+            sens = "".join(sen)
+            message_input['state'] = 'normal'
+            message_input.delete("1.0","end")
+            message_input.insert("1.0",engkor(sens))
+            message_input['state'] = 'disabled'
+            print(1)
+        except:
+            print('키 입력 오류')
+        sft = False
+    else:
+        try:
+            if stop_send:
+                socket.close()
+                exit()
+            #txt = getkey()
+            txt = event.keycode
+            print(txt)
+            if(txt == 22):
+                sen.pop()
+            elif(txt == 36):
+                go_send = True
+            elif(txt == 24):
+                sen.append('q')
+            elif(txt == 25):
+                sen.append('w')
+            elif(txt == 26):
+                sen.append('e')
+            elif(txt == 27):
+                sen.append('r')
+            elif(txt == 28):
+                sen.append('t')
+            elif(txt == 29):
+                sen.append('y')
+            elif(txt == 30):
+                sen.append('u')
+            elif(txt == 31):
+                sen.append('i')
+            elif(txt == 32):
+                sen.append('o')
+            elif(txt == 33):
+                sen.append('p')
+            elif(txt == 38):
+                sen.append('a')
+            elif(txt == 39):
+                sen.append('s')
+            elif(txt == 40):
+                sen.append('d')
+            elif(txt == 41):
+                sen.append('f')
+            elif(txt == 42):
+                sen.append('g')
+            elif(txt == 43):
+                sen.append('h')
+            elif(txt == 44):
+                sen.append('j')
+            elif(txt == 45):
+                sen.append('k')
+            elif(txt == 46):
+                sen.append('l')
+            elif(txt == 52):
+                sen.append('z')
+            elif(txt == 53):
+                sen.append('x')
+            elif(txt == 54):
+                sen.append('c')
+            elif(txt == 55):
+                sen.append('v')
+            elif(txt == 56):
+                sen.append('b')
+            elif(txt == 57):
+                sen.append('n')
+            elif(txt == 58):
+                sen.append('m')
+            elif(txt == 65):
+                sen.append(' ')
+            elif(txt == 62):
+                sft = True
+            if sft == False:
+                sens = "".join(sen)
+                message_input['state'] = 'normal'
+                message_input.delete("1.0","end")
+                message_input.insert("1.0",engkor(sens))
+                message_input['state'] = 'disabled'
+            print(1)
+        except:
+            print('키 입력 오류')
 
 def receive(socket):
-    global chat_cnt, flag, tag_flag, pre_index_num
+    global chat_cnt, flag, tag_flag, pre_index_num, chat_log
     while True:
         try:
             data = socket.recv(1024) #서버로부터 텍스트 받아오기
@@ -136,12 +390,14 @@ def receive(socket):
 
 def login():
     # 서버의 ip주소 및 포트
+    global client_socket
     HOST = '114.70.22.237'; PORT = int('5052')
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((HOST, PORT))
 
     threading.Thread(target=send, args= (client_socket,)).start()
     threading.Thread(target=receive, args= (client_socket,)).start()
+    #threading.Thread(target=send_message, args= (client_socket,)).start()
     exit()
 
 def try_login():
@@ -166,6 +422,7 @@ def set_go_send(event):
     go_send = True
 
 def createNewWindow():
+    global message_input, chat_log, cllient_socket, stop_send
     root_x = app.winfo_rootx()
     root_y = app.winfo_rooty()
     c_root = Toplevel(app)
@@ -191,10 +448,13 @@ def createNewWindow():
     scrollbar['command'] = chat_log.yview
     chat_frame.place(x=20, y=60)
     message_input = Text(c_root, width = 45, height = 3, font=("나눔 고딕", 20, "bold"), foreground="seashell4") ; message_input.place(x=200,y = 647)
+    stop_send = False
+    c_root.bind('<KeyPress>',send_message)
     #send_button = Button(c_root, text = 'Send', command = lambda: set_go_send(None)); send_button.place(x=430, y=405)
-    message_input.bind("<Return>",set_go_send)
+    #message_input.bind("<Return>",send_message)
     #close_button = Button(c_root,text='Close',command=exit); close_button.place(x=230, y = 660)
     c_root.mainloop()
+    stop_send = True
 
 def callback(event):
     email = (email_input.get(1.0,"end")).rstrip()
