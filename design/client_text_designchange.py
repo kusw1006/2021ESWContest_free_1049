@@ -11,7 +11,7 @@ from time import sleep
 from hangul_utils import join_jamos
 import sys
 import os
-
+import subprocess
 # import pyaudio
 
 chat_number = [0] #각 index id에 맞춘 줄을 기억하기 위한 리스트
@@ -391,7 +391,8 @@ def login():
     HOST = '114.70.22.237'; PORT = int('5052')
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((HOST, PORT))
-
+    
+    subprocess.run(["./start_rec.sh"], shell=True)
     threading.Thread(target=send, args= (client_socket,)).start()
     threading.Thread(target=receive, args= (client_socket,)).start()
     #threading.Thread(target=send_message, args= (client_socket,)).start()
@@ -405,6 +406,7 @@ def try_login():
     #ip_entry['state'] = 'readonly'
     #port_entry['state'] = 'readonly'
     go_out = False
+    
 
 def try_logout():
     global go_out
@@ -428,25 +430,25 @@ def createNewWindow():
     c_root.title('실시간 통화 동시 통역 채팅 프로그램')
     c_root.resizable(False, False)
     chat_frame = Frame(c_root)
-    wall_chat = PhotoImage(file = "chat_n.png")
+    wall_chat = PhotoImage(file = "chat.png")
     wall_label_chat = Label(c_root, image = wall_chat)
     wall_label_chat.place(x=0,y=0)
     
     photo = PhotoImage(file = "Home_resize.png")
     btn = Button(c_root, image = photo, command=c_root.destroy, background="midnight blue")
-    btn.place(x=70,y=240)
+    btn.place(x=70,y=260)
     
     photo_menu = PhotoImage(file = "menu_resize.png")
     btn_menu = Button(c_root, image = photo_menu, background="midnight blue")
-    btn_menu.place(x=70,y=300)
+    btn_menu.place(x=70,y=320)
     
     scrollbar = Scrollbar(chat_frame) ; scrollbar.pack(side='right',fill='y')
-    chat_log = Text(c_root, width = 120 , height = 22, state = 'disabled', yscrollcommand = scrollbar.set, padx = 6, pady = 6); chat_log.pack(side='left'); chat_log.place(x=220, y=77)
+    chat_log = Text(c_root, width = 115 , height = 22, state = 'disabled', yscrollcommand = scrollbar.set, padx = 6, pady = 6); chat_log.pack(side='left'); chat_log.place(x=250, y=70)
     chat_log['bg']='#0f1c33'
     scrollbar['command'] = chat_log.yview
     chat_frame.place(x=80, y=60)
     
-    message_input = Text(c_root, width = 69, height = 4, font=("나눔 고딕", 15, "bold")) ; message_input.place(x=357,y = 535)
+    message_input = Text(c_root, width = 68, height = 5, font=("나눔 고딕", 15, "bold")) ; message_input.place(x=374,y = 530)
     message_input['fg']='#d0d9e8'
     message_input['bg']='#0f1c33'
     stop_send = False
@@ -467,20 +469,20 @@ def callback(event):
 go_out, go_send = False, False
 app = Tk()
 app.geometry("%dx%d+%d+%d" % (1280,720,0,0))
-wall = PhotoImage(file = "base_image_n.png")
+wall = PhotoImage(file = "base_image.png")
 wall_label = Label(app, image = wall)
 wall_label.place(x=0,y=0)
 app.resizable(False, False)
 app.title('Login')
-email_input = Text(app, width = 30, height = 2, font=("나눔 고딕", 13, "bold")) ; email_input.place(x=520,y = 336)
+email_input = Text(app, width = 30, height = 2, font=("나눔 고딕", 13, "bold")) ; email_input.place(x=465,y = 355)
 email_input['fg']='#d0d9e8'
 email_input['bg']='#0f1c33'
-password_input = Text(app, width = 30, height = 2, font=("나눔 고딕", 13, "bold")) ; password_input.place(x=520,y = 416)
+password_input = Text(app, width = 30, height = 2, font=("나눔 고딕", 13, "bold")) ; password_input.place(x=465,y = 440)
 password_input['fg']='#d0d9e8'
 password_input['bg']='#0f1c33'
 app.bind('<Return>', callback)
 loginphoto = PhotoImage(file = 'login_resize.png')
-button = Button(app, image = loginphoto ,command=createNewWindow, background="midnight blue"); button.place(x=600, y=506)
+button = Button(app, image = loginphoto ,command=createNewWindow, background="midnight blue"); button.place(x=580, y=506)
 
 
 
