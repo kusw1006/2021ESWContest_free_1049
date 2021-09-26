@@ -11,6 +11,8 @@ from time import sleep
 from hangul_utils import join_jamos
 import sys
 import os
+import subprocess
+from tkinter import scrolledtext
 # import pyaudio
 
 chat_number = [0] #각 index id에 맞춘 줄을 기억하기 위한 리스트
@@ -23,10 +25,18 @@ sen = []
 sens = ""
 stop_send = True
 sft = False
+scale = ""
+
+first_login = True
+
+m_or_w = 0
+mw_scale = "0.0"
+mw_value = 0
 
 chat_log = False
 message_input = False
 client_socket = False
+
 
 # 자음-초성/종성
 cons = {'r':'ㄱ', 'R':'ㄲ', 's':'ㄴ', 'S':'ㄴ', 'e':'ㄷ', 'E':'ㄸ', 'f':'ㄹ', 'F':'ㄹ', 'a':'ㅁ', 'A':'ㅁ', 'q':'ㅂ', 'Q':'ㅃ', 't':'ㅅ', 'T':'ㅆ',
@@ -97,48 +107,35 @@ def engkor(text):
 
     return join_jamos(result)
     
-try:
-    # Linux & Mac 용 코드
-    import sys
-    import tty
-    import termios
-
-    def getkey():
-        """단일키 누르는 것을 받아옴"""
-        fd = sys.stdin.fileno()
-        original_attributes = termios.tcgetattr(fd)
-        try:
-            tty.setraw(sys.stdin.fileno())
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, original_attributes)
-        return ch
-except:
-    print("xxxx")
 
 def send(socket):
-    global go_send, chat_cnt, message_input, chat_log
+    global go_send, chat_cnt, message_input, chat_log, sen, m_or_w, mw_scale
     while True:
         if go_send:
             message = (message_input.get(1.0,"end")).rstrip() #입력 된 메세지 읽어오기
+            sen.clear()
+            message_input['state'] = 'normal'
+            message_input.delete("1.0","end")
+            message_input['state'] = 'disabled'
             if message[0] != 'A' and message[0] != 'C' and message[0] != 'D' and message[0] != 'T' and message[0] != 'E' and message[0] != 'F':
                 chat_log['state'] = 'normal'
                 chat_log.insert("end",'손님' + '\n')
                 chat_log.tag_add(str(chat_cnt) + 'C', str(chat_cnt) + ".0", str(chat_cnt) + ".end")
-                chat_log.tag_config(str(chat_cnt) + 'C', foreground="black", font=("Arial", 8, "bold"),justify=RIGHT)
+                chat_log.tag_config(str(chat_cnt) + 'C', foreground="seashell", font=("Arial", 8, "bold"),justify=RIGHT)
                 chat_cnt = chat_cnt + 1
                 chat_log.insert("end", message + '\n')
                 chat_log['state'] = 'disabled'
                 chat_log.see('end')
                 chat_log.tag_add(str(chat_cnt) + 'C', str(chat_cnt) + ".0", str(chat_cnt) + ".end")
-                chat_log.tag_config(str(chat_cnt) + 'C', foreground="green", font=("Arial", 14, "bold"),justify=RIGHT)
+                chat_log.tag_config(str(chat_cnt) + 'C', foreground='#81cfe0',font=("Arial", 14, "bold"),justify=RIGHT)
                 chat_cnt = chat_cnt + 1
                 #메세지 출력용
             elif message[0] == 'F':
                 chat_log['state'] = 'normal'
                 chat_log.insert("end",'[System] 통화가 시작됩니다.' + '\n')
                 chat_log.tag_add(str(chat_cnt) + 'C', str(chat_cnt) + ".0", str(chat_cnt) + ".end")
-                chat_log.tag_config(str(chat_cnt) + 'C', foreground="blue", font=("Arial", 10, "bold"),justify=CENTER)
+                chat_log.tag_config(str(chat_cnt) + 'C', font=("Arial", 10, "bold"),justify=CENTER)
+                chat_log['fg']='#e4f1fe'   # white
                 chat_cnt = chat_cnt + 1
                 chat_log['state'] = 'disabled'
                 #통화 시작 알림
@@ -146,10 +143,16 @@ def send(socket):
                 chat_log['state'] = 'normal'
                 chat_log.insert("end",'[System] 이 통화는 청각장애인 분들의 원활한 통화를 위한 실시간 통역시스템이 작동하고 있습니다. 여유를 가지고 천천히 답변해주세요.' + '\n')
                 chat_log.tag_add(str(chat_cnt) + 'C', str(chat_cnt) + ".0", str(chat_cnt) + ".end")
-                chat_log.tag_config(str(chat_cnt) + 'C', foreground="blue", font=("Arial", 10, "bold"))
+                chat_log.tag_config(str(chat_cnt) + 'C', font=("Arial", 10, "bold"))
+                chat_log['fg']='#e4f1fe'   # white
                 chat_cnt = chat_cnt + 1
                 chat_log['state'] = 'disabled'
                 #시스템 알림
+            if m_or_w == 0:
+                message = "M" + "{" + str(mw_scale) + "}" + message
+            elif m_or_w == 1:
+                message = "W" + "{" + str(mw_scale) + "}" + message
+            print(message)
             socket.send(message.encode()) #서버로 텍스트 보내기
             message_input.delete(1.0, "end") #입력창 비우기
             go_send = False
@@ -174,6 +177,7 @@ def send_message(event):
                 sen.pop()
             elif(txt == 36):
                 go_send = True
+                sen.clear()
             elif(txt == 24):
                 sen.append('Q')
             elif(txt == 25):
@@ -228,6 +232,8 @@ def send_message(event):
                 sen.append('M')
             elif(txt == 65):
                 sen.append(' ')
+            else:
+                sen.append('')
             sens = "".join(sen)
             message_input['state'] = 'normal'
             message_input.delete("1.0","end")
@@ -303,8 +309,10 @@ def send_message(event):
                 sen.append('m')
             elif(txt == 65):
                 sen.append(' ')
-            elif(txt == 62):
+            elif(txt == 62 or txt == 50):
                 sft = True
+            else:
+                sen.append('')
             if sft == False:
                 sens = "".join(sen)
                 message_input['state'] = 'normal'
@@ -316,15 +324,31 @@ def send_message(event):
             print('키 입력 오류')
 
 def receive(socket):
-    global chat_cnt, flag, tag_flag, pre_index_num, chat_log
+    global chat_cnt, flag, tag_flag, pre_index_num, chat_log, chat_number
     while True:
         try:
             data = socket.recv(1024) #서버로부터 텍스트 받아오기
             data = data.decode() #디코드
-            if(len(data)==1): continue #비어있을 경우 continue
+            if(len(data)==1 or len(data)==0):
+                chat_log['state'] = 'normal'
+                chat_log.see('end')
+                chat_log['state'] = 'disabled'
+                continue #비어있을 경우 continue
             if data[0]=='A': #A로 들어오는 경우
                 print("A")
-                index_num = int(data[data.find('{') + 1:data.find('}')]) #index id 추출
+                index_num = int(data[data.find('{') + 1:data.find('}')]) #index id 추출                
+                #if index_num >= len(chat_number):
+                #    chat_log.insert(str(chat_cnt) + ".0",'\n' + '점주' + '\n')
+                #    chat_log.tag_add(str(chat_cnt) + 'C', str(chat_cnt) + ".0", str(chat_cnt) + ".end")
+                #    chat_log.tag_config(str(chat_cnt) + 'C', foreground="seashell", font=("Arial", 8, "bold"))
+                #    chat_cnt = chat_cnt + 1 #점주라는 이름 띄우기
+                #    print(chat_cnt)
+                #    chat_number.append(chat_cnt) #index id에 맞는 줄 저장
+                #    chat_log.insert("end",'\n') #줄 띄워주기
+                #    chat_log.see('end')
+                #    chat_cnt = chat_cnt + 1
+                #    chat_log.insert(str(chat_number[index_num]) + ".end", str(data[data.find('}') + 1:]) + ' ') #텍스트 입력
+                #    continue
                 if(pre_index_num != index_num): #만약 index id에 변화가 있다면 플래그 변수 초기화
                     flag = 1
                     tag_flag = 0
@@ -335,10 +359,12 @@ def receive(socket):
                     print("flag 1")
                     chat_log.insert(str(chat_cnt) + ".0",'점주' + '\n')
                     chat_log.tag_add(str(chat_cnt) + 'C', str(chat_cnt) + ".0", str(chat_cnt) + ".end")
-                    chat_log.tag_config(str(chat_cnt) + 'C', foreground="black", font=("Arial", 8, "bold"))
+                    chat_log.tag_config(str(chat_cnt) + 'C', foreground="seashell", font=("Arial", 8, "bold"))
                     chat_cnt = chat_cnt + 1 #점주라는 이름 띄우기
                     print(chat_cnt)
                     chat_number.append(chat_cnt) #index id에 맞는 줄 저장
+                    if chat_number[index_num] == -1:
+                        continue
                     chat_log.insert("end",'\n') #줄 띄워주기
                     chat_log.see('end')
                     chat_cnt = chat_cnt + 1
@@ -346,26 +372,26 @@ def receive(socket):
                     if tag_flag == 0: #이전에 tag된 적이 없다면
                         print("flag 1 tag_flag 0")
                         chat_log.tag_add(chat_number[index_num], str(chat_number[index_num]) + ".0", str(chat_number[index_num]) + ".end")
-                        chat_log.tag_config(chat_number[index_num], foreground="red", font=("Arial", 14, "bold"))
+                        chat_log.tag_config(chat_number[index_num], foreground='#8ab2e2',font=("Arial", 14, "bold"))
                         tag_flag = 1
                     else: #이전에 tag된 적이 있다면
                         print("flag 1 tag_flag 1")
                         chat_log.tag_delete(chat_number[index_num])
                         chat_log.tag_add(chat_number[index_num], str(chat_number[index_num]) + ".0", str(chat_number[index_num]) + ".end")
-                        chat_log.tag_config(chat_number[index_num], foreground="red", font=("Arial", 14, "bold"))
+                        chat_log.tag_config(chat_number[index_num], foreground='#8ab2e2', font=("Arial", 14, "bold"))
                     flag = 0
                 else :
                     chat_log.insert(str(chat_number[index_num]) + ".end",str(data[data.find('}') + 1:]) + ' ')
                     if tag_flag == 0:#이전에 tag된 적이 없다면
                         print("flag 0 tag_flag 0")
                         chat_log.tag_add(chat_number[index_num], str(chat_number[index_num]) + ".0", str(chat_number[index_num]) + ".end")
-                        chat_log.tag_config(chat_number[index_num], foreground="red", font=("Arial", 14, "bold"))
+                        chat_log.tag_config(chat_number[index_num], foreground='#8ab2e2', font=("Arial", 14, "bold"))
                         tag_flag = 1
                     else:#이전에 tag된 적이 있다면
                         print("flag 0 tag_flag 1")
                         chat_log.tag_delete(chat_number[index_num])
                         chat_log.tag_add(chat_number[index_num], str(chat_number[index_num]) + ".0", str(chat_number[index_num]) + ".end")
-                        chat_log.tag_config(chat_number[index_num], foreground="red", font=("Arial", 14, "bold"))
+                        chat_log.tag_config(chat_number[index_num], foreground='#8ab2e2', font=("Arial", 14, "bold"))
                 chat_log.see('end')
                 chat_log['state'] = 'disabled'
             elif data[0]=='C' or data[0]=='D' or data[0]=='T': #만약 rescore, decode, space 문장이 들어올 경우 문장 덮어쓰기
@@ -373,13 +399,33 @@ def receive(socket):
                 if data[0]=='D': print('D')
                 if data[0]=='T': print('T')
                 index_num = int(data[data.find('{') + 1:data.find('}')])
+                if index_num >= len(chat_number):
+                    chat_number.append(-1)
+                if chat_number[index_num] == -1:
+                    chat_log['state'] = 'normal'
+                    chat_log.see('end')
+                    chat_log['state'] = 'disabled'
+                    print("continue")
+                    continue
+                #if index_num >= len(chat_number):
+                #    chat_log.insert(str(chat_cnt) + ".0",'\n' + '점주' + '\n')
+                #    chat_log.tag_add(str(chat_cnt) + 'C', str(chat_cnt) + ".0", str(chat_cnt) + ".end")
+                #    chat_log.tag_config(str(chat_cnt) + 'C', foreground="seashell", font=("Arial", 8, "bold"))
+                #    chat_cnt = chat_cnt + 1 #점주라는 이름 띄우기
+                #    print(chat_cnt)
+                #    chat_number.append(chat_cnt) #index id에 맞는 줄 저장
+                #    chat_log.insert("end",'\n') #줄 띄워주기
+                #    chat_log.see('end')
+                #    chat_cnt = chat_cnt + 1
+                #    chat_log.insert(str(chat_number[index_num]) + ".end", str(data[data.find('}') + 1:]) + ' ') #텍스트 입력
+                #    continue
                 print(index_num)
                 chat_log['state'] = 'normal'
                 chat_log.delete(str(chat_number[index_num])+".0",str(chat_number[index_num])+".end")
                 chat_log.insert(str(chat_number[index_num])+".0",str(data[data.find('}') + 1:]))
                 chat_log.tag_delete(chat_number[index_num])
                 chat_log.tag_add(chat_number[index_num], str(chat_number[index_num]) + ".0", str(chat_number[index_num]) + ".end")
-                chat_log.tag_config(chat_number[index_num], foreground="red", font=("Arial", 14, "bold"))
+                chat_log.tag_config(chat_number[index_num], foreground='#8ab2e2', font=("Arial", 14, "bold"))
                 chat_log.see('end')
                 chat_log['state'] = 'disabled'
         except ConnectionAbortedError as e: #예외 발생시 통화 종료
@@ -394,60 +440,109 @@ def login():
     HOST = '114.70.22.237'; PORT = int('5052')
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((HOST, PORT))
-
+    
     threading.Thread(target=send, args= (client_socket,)).start()
     threading.Thread(target=receive, args= (client_socket,)).start()
+    subprocess.run(["./start_rec.sh"], shell=True)
     #threading.Thread(target=send_message, args= (client_socket,)).start()
     exit()
 
 def try_login():
     global go_out, chat_cnt
     start_new_thread(login,())
-    login_button['state'] = 'disabled'
-    logout_button['state'] = 'active'
-    ip_entry['state'] = 'readonly'
-    port_entry['state'] = 'readonly'
+    #login_button['state'] = 'disabled'
+    #logout_button['state'] = 'active'
+    #ip_entry['state'] = 'readonly'
+    #port_entry['state'] = 'readonly'
     go_out = False
+    
 
 def try_logout():
     global go_out
-    login_button['state'] = 'active'
-    logout_button['state'] = 'disabled'
-    ip_entry['state'] = 'normal'
-    port_entry['state'] = 'normal'
+    #login_button['state'] = 'active'
+    #logout_button['state'] = 'disabled'
+    #ip_entry['state'] = 'normal'
+    #port_entry['state'] = 'normal'
     go_out = True
 
 def set_go_send(event):
     global go_send
     go_send = True
+    
+def scale_get(self):
+    global mw_scale, scale, mw_value
+    mw_value = int(scale.get())
+    value = mw_value/5
+    mw_scale = str(value)
+        
+def ch_to_m():
+    global m_or_w
+    m_or_w = 0
+    
+def ch_to_w():
+    global m_or_w
+    m_or_w = 1
+    
+def set_menu():
+    global scale, mw_valuesend_message
+    s_menu = Toplevel(app)
+    s_menu.geometry("%dx%d+%d+%d" % (640,720,0,0))
+    s_menu.title('menu')
+    menu_wall = PhotoImage(file = "setting.png")
+    menu_label = Label(s_menu, image = menu_wall)
+    menu_label.place(x=-640,y=0)
+    s_menu.resizable(False,False)
+    checkmw = IntVar(value = m_or_w)
+    cm = Radiobutton(s_menu, activebackground='#2f528f', highlightbackground='#0e1a2d', borderwidth=0, selectcolor='#e4f1fe', command=ch_to_m, variable = checkmw, value=0)
+    cw = Radiobutton(s_menu, activebackground='#2f528f', highlightbackground='#0e1a2d', borderwidth=0, selectcolor='#e4f1fe', command=ch_to_w, variable = checkmw, value=1)
+    cm['bg']='#0e1a2d'
+    cw['bg']='#0e1a2d'
+    cm.place(x=260,y=210)
+    cw.place(x=400,y=210)
+    scale = Scale(s_menu, from_=0, to=100, background='#0e1a2d', bd=3, troughcolor='#2f528f',command=scale_get, font=("나눔 고딕", 15, "bold"), highlightbackground="#0e1a2d",orient="horizontal", sliderlength=20, length=230)
+    scale['fg']='#e4f1fe'
+    scale['bg']='#0e1a2d'
+    scale.set(mw_value)
+    scale.place(x=260,y=323)
+    email_info = Label(s_menu, text="vvs@konkuk.ac.kr",font=("나눔 고딕", 15, "bold"), highlightbackground='#2f528f', width=20,height=2)
+    email_info['fg']='#e4f1fe'
+    email_info['bg']='#0e1a2d'
+    email_info.place(x=260,y=463)
+    s_menu.mainloop()
 
 def createNewWindow():
     global message_input, chat_log, cllient_socket, stop_send
     root_x = app.winfo_rootx()
     root_y = app.winfo_rooty()
     c_root = Toplevel(app)
-    c_root.geometry("%dx%d+%d+%d" % (1012,787,0,0))
+    c_root.geometry("%dx%d+%d+%d" % (1280,720,0,0))
     #c_root.wm_attributes("-topmost",1)
     c_root.title('실시간 통화 동시 통역 채팅 프로그램')
     c_root.resizable(False, False)
-    chat_frame = Frame(c_root)
+    #chat_frame = Frame(c_root)
     wall_chat = PhotoImage(file = "chat.png")
     wall_label_chat = Label(c_root, image = wall_chat)
     wall_label_chat.place(x=0,y=0)
     
-    photo = PhotoImage(file = "home.png")
-    btn = Button(c_root, image = photo, command=c_root.destroy, background="wheat1")
-    btn.place(x=70,y=30)
+    photo = PhotoImage(file = "Home_resize.png")
+    btn = Button(c_root, image = photo, command=c_root.destroy, highlightbackground='#2f528f', background="midnight blue")
+    btn.place(x=70,y=260)
     
-    photo_menu = PhotoImage(file = "menu.png")
-    btn_menu = Button(c_root, image = photo_menu, background="wheat1")
-    btn_menu.place(x=890,y=30)
+    photo_menu = PhotoImage(file = "menu_resize.png")
+    btn_menu = Button(c_root, image = photo_menu, command=set_menu, highlightbackground='#2f528f', background="midnight blue")
+    btn_menu.place(x=70,y=320)
     
-    scrollbar = Scrollbar(chat_frame) ; scrollbar.pack(side='right',fill='y')
-    chat_log = Text(c_root, width = 100 , height = 24, state = 'disabled', yscrollcommand = scrollbar.set, padx = 6, pady = 6); chat_log.pack(side='left'); chat_log.place(x=100, y=150)
+    scrollbar = Scrollbar(c_root) ; scrollbar.pack(side='right',fill='y')
+    chat_log = scrolledtext.ScrolledText(c_root, width = 113 , height = 22, state = 'disabled', highlightbackground='#2f528f', yscrollcommand = scrollbar.set, padx = 6, pady = 6); chat_log.pack(side='left') 
+    chat_log.place(x=250, y=70)
+    chat_log['bg']='#0f1c33'
     scrollbar['command'] = chat_log.yview
-    chat_frame.place(x=20, y=60)
-    message_input = Text(c_root, width = 45, height = 3, font=("나눔 고딕", 20, "bold"), foreground="seashell4") ; message_input.place(x=200,y = 647)
+    #chat_frame.pack()
+    #chat_frame.place(x=80, y=60)
+    
+    message_input = Text(c_root, width = 43, height = 3, font=("나눔 고딕", 24, "bold"), highlightbackground='#2f528f') ; message_input.place(x=374,y = 530)
+    message_input['fg']='#d0d9e8'
+    message_input['bg']='#0f1c33'
     stop_send = False
     c_root.bind('<KeyPress>',send_message)
     #send_button = Button(c_root, text = 'Send', command = lambda: set_go_send(None)); send_button.place(x=430, y=405)
@@ -457,52 +552,54 @@ def createNewWindow():
     stop_send = True
 
 def callback(event):
+    global first_login
     email = (email_input.get(1.0,"end")).rstrip()
     password = (password_input.get(1.0,"end")).rstrip()
     if(email == "vvs@konkuk.ac.kr" and password == "1234"):
+        if first_login == True:
+            try_login()
+            first_login = False
+        email_input.delete("1.0","end")
+        password_input.delete("1.0","end")
         createNewWindow()
+        
+def callback1():
+    global first_login
+    email = (email_input.get(1.0,"end")).rstrip()
+    password = (password_input.get(1.0,"end")).rstrip()
+    print(email)
+    print(password)
+    if(email == "vvs@konkuk.ac.kr" and password == "1234"):
+        if first_login == True:
+            try_login()
+            first_login = False
+        email_input.delete("1.0","end")
+        password_input.delete("1.0","end")
+        createNewWindow()
+        
+def tab(event):
+    tx = event.keycode
+    if tx == 65:
+        password_input['state'] = 'normal'
+        password_input.focus()
 
 go_out, go_send = False, False
 app = Tk()
-app.geometry("%dx%d+%d+%d" % (483,483,0,0))
+app.geometry("%dx%d+%d+%d" % (1280,720,0,0))
 wall = PhotoImage(file = "base_image.png")
 wall_label = Label(app, image = wall)
 wall_label.place(x=0,y=0)
 app.resizable(False, False)
 app.title('Login')
-email_input = Text(app, width = 22, height = 1) ; email_input.place(x=180,y = 232)
-password_input = Text(app, width = 18, height = 1) ; password_input.place(x=210,y = 293)
+email_input = Text(app, width = 23, height = 1, highlightbackground='#2f528f', font=("나눔 고딕", 17, "bold")) ; email_input.place(x=465,y = 360)
+email_input['fg']='#d0d9e8'
+email_input['bg']='#0f1c33'
+password_input = Text(app, width = 23, height = 1, highlightbackground='#2f528f', font=("나눔 고딕", 17, "bold")) ; password_input.place(x=465,y = 445)
+password_input['fg']='#d0d9e8'
+password_input['bg']='#0f1c33'
 app.bind('<Return>', callback)
-button = Button(app, text="Login",command=createNewWindow)
-button.pack()
-
-#c_root = Tk()
-#c_root.geometry('500x500')
-#c_root.title('실시간 통화 동시 통역 채팅 프로그램')
-#c_root.resizable(False, False)
-
-''' Top Menu '''
-#Label(c_root, text = 'Server IP : ').place(x=20, y=20)
-#Label(c_root, text = 'Port : ').place(x=250, y=20)
-#ip_entry = Entry(c_root, width=14); ip_entry.place(x=83, y=21)
-#ip_entry.insert(0,'114.70.22.237')
-#port_entry = Entry(c_root, width=5); port_entry.place(x = 290, y=21)
-#port_entry.insert(0,'5052')
-#login_button = Button(app,text='Log In', command=try_login); login_button.place(x=350, y=18)
-#logout_button = Button(app,text='Log Out',state = 'disabled', command = try_logout); logout_button.place(x=420, y=18)
-
-''' Middle Menu '''
-#chat_frame = Frame(c_root)
-#scrollbar = Scrollbar(chat_frame) ; scrollbar.pack(side='right',fill='y')
-#chat_log = Text(chat_frame, width = 55 , height = 18, state = 'disabled', yscrollcommand = scrollbar.set, padx = 6, pady = 6); chat_log.pack(side='left')#place(x=20, y=60)
-#scrollbar['command'] = chat_log.yview
-#chat_log.image_create 이거 사용
-#chat_frame.place(x=20, y=60)
-#message_input = Text(c_root, width = 45, height = 4) ; message_input.place(x=20,y = 390)
-#send_button = Button(c_root, text = 'Send', command = lambda: set_go_send(None)); send_button.place(x=430, y=405)
-#message_input.bind("<Return>",set_go_send)
-
-''' Bottom Menu '''
-#close_button = Button(c_root,text='Close',command=exit); close_button.place(x=200, y = 460)
+app.bind('<KeyPress>',tab)
+loginphoto = PhotoImage(file = 'login_resize.png')
+button = Button(app, image = loginphoto ,command=createNewWindow, highlightbackground='#2f528f', background="midnight blue"); button.place(x=580, y=506)
 
 app.mainloop()
