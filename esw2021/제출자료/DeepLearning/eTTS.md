@@ -95,12 +95,6 @@ cd ../..
 
 
 
-
-
-
-
-
-
 ## 전체구조
 
 ![](./ETTS3.png)
@@ -154,8 +148,6 @@ if config["generator_params"]["out_channels"] > 1:
 3. cmvn은 pre-trained된 값을 가져와 읽어들임
 
 4. 이후에 emotion.scp를 통해 각 감정의 대표 벡터들이 있는 ark에 접근하여 해당 벡터들을 가져온뒤
-
-
 
 5. 우리의 E2E-TTS 모델에 char과 inference_args = tacotron2의 인자 및 임베딩된 speakerid, speakerId+input_emotion 넣기
 6.  cmvn에 모델의 mel spectrogram 적용, reshape 한뒤 가우시안 노이즈 추가하여 pqmf에 넣어 synthesis
@@ -407,24 +399,6 @@ WaveRNN 등이 있다. WaveNet은 이전 샘플을 이용하
 ```
 
 
-
-#### 결과
-
-MOS
-
-|           | 동기1 | 동기2 | 동기3 | 동기4 | 동기5 | …    |      | 평균 |
-| --------- | ----- | ----- | ----- | ----- | ----- | ---- | ---- | ---- |
-| Neutral   | 4     | 3     | 3     | 5     | 4     |      |      |      |
-| Anger     |       |       |       |       |       |      |      |      |
-| Sadness   |       |       |       |       |       |      |      |      |
-| Happiness |       |       |       |       |       |      |      |      |
-
-|           | TPR(true positive rate) | TNR(true negative rate) | Accuracy |
-| --------- | ----------------------- | ----------------------- | -------- |
-| neutral   |                         |                         |          |
-| anger     |                         |                         |          |
-| sadness   |                         |                         |          |
-| happiness |                         |                         |          |
 
 
 
