@@ -10,3 +10,9 @@
 | 신지혜 | 전기전자공학부 | long0404@konkuk.ac.kr    |
 
 데이터 전처리, sox, shell script파일은 etc로 이동
+
+
+## TODOS
+- server, client 고급화
+- raspberryPi/src/client_text.py 코드 최적화
+- Large HCLG graph 제작
