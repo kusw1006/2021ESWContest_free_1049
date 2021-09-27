@@ -21,13 +21,23 @@
   | triphone train         | 4200        | 40000            |
   | lda + mllt + SAT train | 4200        | 40000            |
 
-   
+  - LDA(linear discriminant Analysis)
+  - MLLT (maxixum likelihood linear transform)
+  - fMLLR (feature space maximum likelihood linear regression)
 
 - multicondition
 
   CHAIN 모델에 대한 학습 후 작성 필요
 
+  snrs 배열 수정 (30:20:15:5:0)
 
+  reverberate 3 iter
+
+  maxspeaker 2
+
+  1dConv + batch norm + relu NN 사용
+
+  
 
 #### 사용한 데이터
 
