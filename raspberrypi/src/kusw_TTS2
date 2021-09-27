@@ -1,0 +1,60 @@
+import os
+import sys
+import socket
+import threading
+
+import time
+import io
+from io import BytesIO
+
+from pydub import AudioSegment
+from pydub.playback import play
+
+import numpy as np
+
+HOST = '114.70.22.237'
+PORT = 5053
+
+def write_to_fp(fp, input_wav):
+    fp.write(input_wav)
+    
+    
+flag = True
+
+def recv(client_sock):
+   
+    while True:
+        file_size = int.from_bytes(client_sock.recv(4096), byteorder="big")
+    
+        fp = BytesIO()
+        fp.flush()
+
+        nowdown_size = 0
+        downbuff_size = 1048576
+        while True:
+            if nowdown_size < file_size:
+                resp = client_sock.recv(min(downbuff_size, file_size - nowdown_size))
+                nowdown_size += len(resp)
+                fp.write(resp)
+                print("Download %.4f%%" % min(100, nowdown_size / file_size * 100))
+                sys.stdout.flush()
+            else:
+                print("Finish!\n")
+                break
+    
+        sound = AudioSegment.from_wav(fp)
+        sound.set_channels(1)
+        sound.export("./02.mp3", format = "mp3", bitrate="128k")
+        
+        sound2 = AudioSegment.from_mp3("./02.mp3")
+        play(sound2)
+        
+    
+#-------------이부분만 반복--------------#
+
+
+client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+client_socket.connect((HOST,PORT))
+
+thread1 = threading.Thread(target = recv, args=(client_socket, ))
+thread1.start()
