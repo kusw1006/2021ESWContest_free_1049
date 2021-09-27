@@ -12,8 +12,8 @@
 데이터 전처리, sox, shell script파일은 etc로 이동
 
 ## 구조
-![](./graphAM.png)
-![](./graphLM.png)
+![](./graph_AM.png)
+![](./graph_LM.png)
 
 
 ## TODOS
