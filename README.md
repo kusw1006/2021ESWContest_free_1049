@@ -11,6 +11,10 @@
 
 데이터 전처리, sox, shell script파일은 etc로 이동
 
+## 구조
+![](./graphAM.png)
+![](./graphLM.png)
+
 
 ## TODOS
 - server, client 고급화
