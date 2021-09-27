@@ -1,0 +1,15 @@
+Pytorch, c++, shell, perl script, python
+
+개발 툴: KALDI , espnet 0.7.0
+
+필요 라이브러리:
+
+
+Computer1
+VGA: RTX3080
+RAM 64GB + swap memory 128GB
+
+
+Computer2
+VGA: GTX1080TI SLI
+RAM 32GB + swap memory 96GB
