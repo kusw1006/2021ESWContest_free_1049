@@ -8,13 +8,24 @@
 
 ## run_kspon.sh
 
-### data_prep
-
 ### AM학습
 
 #### 학습 파라미터
 
-> run_openslr을 보면서 GMM 수치나 이런거 찾아서 적기@@@
+- clean
+
+  | 학습종류               | maximum pdf | maximum gaussian |
+  | ---------------------- | ----------- | ---------------- |
+  | delta train            | 2000        | 10000            |
+  | lda + mllt train       | 2500        | 15000            |
+  | triphone train         | 4200        | 40000            |
+  | lda + mllt + SAT train | 4200        | 40000            |
+
+   
+
+- multicondition
+
+  CHAIN 모델에 대한 학습 후 작성 필요
 
 
 
