@@ -12,7 +12,7 @@
 데이터 전처리, sox, shell script파일은 etc로 이동
 
 ## 구조
-![](./graph_AM.png)
+![](./graph_AM_수정.png)
 ![](./graph_LM.png)
 
 
