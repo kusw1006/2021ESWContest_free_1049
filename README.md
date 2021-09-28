@@ -390,26 +390,23 @@ CUDNN 8.0.5
 
 ## 채팅 UI 구성 및 사용법
 ![](./imgs/Login.png)
-```
-1. Login Interface
-- Email, Password 입력 후 Enter or Login 버튼 클릭
-- Tab은 Tkinter에서 사용 불가능하여 Space로 대체
-```
+
+>Login Interface
+>- Email, Password 입력 후 Enter or Login 버튼 클릭
+>- Tab은 Tkinter에서 사용 불가능하여 Space로 대체
+
 ![](./imgs/Main_Chatting.png)
-```
-2. Main Chatting Interface
-- Home 버튼을 누르면 Login 화면으로 나가진다.
-- Menu 버튼을 누르면 Menu 팝업창이 나온다.
-- 하단에는 채팅을 입력하는 Chat 인터페이스가 있다.
-- 중앙에는 채팅 로그를 띄워주는 인터페이스가 있다.
-```
+>Main Chatting Interface
+>- Home 버튼을 누르면 Login 화면으로 나가진다.
+>- Menu 버튼을 누르면 Menu 팝업창이 나온다.
+>- 하단에는 채팅을 입력하는 Chat 인터페이스가 있다.
+>- 중앙에는 채팅 로그를 띄워주는 인터페이스가 있다.
+
 ![](./imgs/Menu.png)
-```
-3. Menu Interface
-- 성별을 선택하여 TTS의 성별을 결정 가능하다.
-- Scale을 선택하여 TTS의 감정 감도를 결정 가능하다.
-- Information을 확인할 수 있다.
-```
+>Menu Interface
+>- 성별을 선택하여 TTS의 성별을 결정 가능하다.
+>- Scale을 선택하여 TTS의 감정 감도를 결정 가능하다.
+>- Information을 확인할 수 있다.
 
 ## TODOS
 
