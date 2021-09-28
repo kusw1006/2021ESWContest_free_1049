@@ -408,6 +408,16 @@ CUDNN 8.0.5
 >- Scale을 선택하여 TTS의 감정 감도를 결정 가능하다.
 >- Information을 확인할 수 있다.
 
+## HW
+>VVS의 하드웨어 구성
+>- Raspberry Pi 4B+
+>- HiFiBerry DAC+ ADC pro
+>- USB SoundCard
+
+![](./imgs/RPI_Case.png)
+>3D Printer 케이스 도면  
+>- 발열 문제가 심해 쿨러를 별도로 설치하기 위한 케이스를 도면을 제작함
+
 ## TODOS
 
 - server, client 고급화
