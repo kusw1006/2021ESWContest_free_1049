@@ -250,13 +250,9 @@
   >
   > - **실행 전 Stage 변수 확인**
 
-  
-
 - 학습 파일 추출 방법
 
   > ```/opt/zeroth/s5/local/export.sh``` 참조
-
-  
 
 - 단어 추가 방법
 
@@ -364,9 +360,11 @@
 
 ## Requirement
 
-ESPnet
-
-Kaldi 
+> ESPnet 0.7.0
+>
+> Kaldi >= 5.4
+>
+> Pytorch >= 1.7.0
 
 
 
