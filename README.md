@@ -14,7 +14,6 @@
 ## 구조
 ![](./graph_AM_수정.png)
 ![](./graph_LM.png)
-![](./VVS 구성도.html)
 
 
 ## TODOS
