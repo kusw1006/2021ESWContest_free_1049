@@ -298,8 +298,32 @@
 
 ## 서버 구성도
 
-![서버 구성도]
+![](./imgs/TCP.png)
 
+> 서버는 main server, TTS & Sentimental server, Spacing client, Chatting client, TTS receive client, Voice send client 여섯 개의 프로그램으로 구성되어있다. 연결 구조는 첨부한 사진과 같으며, 동작을 위해서는 아래와 같은 절차를 진행한다.
+
+
+
+
+```sh
+telnet ${서버주소}
+```
+
+> 1. telnet으로 서버에 접속하고 ID와 Passwd를 입력한다
+
+```sh
+cd /opt
+sudo sh allStart.sh
+```
+
+> 2. /opt 디렉토리로 이동해서 allStart.sh 파일을 실행시키고 connect success가 뜰 때까지 기다린다
+
+```sh
+sh start.sh
+```
+
+> 3. ctrl + alt+ T를 이용해 새 터미널 창을 열고 start.sh파일을 실행시킨다.
+> 4. 이후 로그인 창이 뜨면 로그인한 뒤 프로그램을 사용한다.
 
 
 ## 딥러닝 클라이언트 구조
@@ -333,7 +357,7 @@
 
 ##### 1-3. FastSpeech
 
-![fastSpeech]
+![](./imgs/etts_graph.png)
 
 > FastSpeech 모델은 Text2Mel 작업을 위한 Neural Network이며, 같은 작업을 하는 Tacotron2
 > 는 Regressive한 구조를 가지는데 비해 FastSpeech는 Non-autoRegressive한 구조를 가져 훨씬 
@@ -344,7 +368,19 @@
 
 ### Korean Spacing Model
 
+![](./imgs/spacing_model.png)
+> 실시간으로 들어오는 문장에 대해 처리하는 만큼 정확도를 유지한 채 빠른 속도로 동작하기 위해 CNN모델을 사용했다.
+> 띄어쓰기가 잘 되어있는 한국어 문장에 랜덤하게 공백을 삭제/ 추가하고 원래의 문장으로 북구하기 위한 label을 생성함으로써 학습시켰다.
+> 0, 1, 2의 라벨을 갖게되며 0은 현상유지, 1은 띄어쓰기 추가, 2는 띄어쓰기 삭제를 의미한다.
+> 공백 삭제의 확률은 0.15, 공백 추가의 확률은 0.5로, 형태소 단위로 띄어쓰기가 되는 kaldi의 환경에 맞추어 공백 추가 확률을 높게 조정했다.
+> 학습한 모델의 성능은 GTX1080Ti SLI환경에서 아래의 표와 같았다.
 
+
+
+|               case               | 정확도 | 추론 시간 |
+| :------------------------------: | :----: | :-------: |
+|     공백을 모두 제거한 문장      | 0.9442 |  0.088ms  |
+| 모든 음절마다 공백을 추가한 문장 | 0.9539 |  0.088ms  |
 
 
 
