@@ -17,10 +17,79 @@
 
 
 
-## 구조
 
-![](./graph_AM_수정.png)
-![](./graph_LM.png)
+
+## 주의사항
+
+> 학습 및 실행은 
+>
+> - CuDA GPU >= 2
+> - RAM >= 150GB (ksponSpeech  1000hours 학습 시 필요)
+> - HDD >= 1TB
+
+
+
+## Kaldi
+
+### 학습데이터
+
+#### 1. AM
+
+> KSponSpeech (1000 hrs) + OpenSLR (51.6 hrs)의 음향 데이터를 이용
+
+![](./imgs/graph_AM_수정.png)
+
+##### 1-1. Sox Pipeline
+
+> ```/opt/zeroth/s5/local/nnet3/multi_condition/run_ivector_common.sh.md``` 참조
+
+
+
+#### 2. LM
+
+![](./imgs/graph_LM.png)
+
+> 모두의 말뭉치, AI HUB의 말뭉치 및 Web Scrapping을 이용하여 말뭉치를 구성하였으며
+>
+> 2.5억개의 문장으로 제작하였다.	
+
+
+
+### 사용방법
+
+
+
+
+
+
+
+
+
+- 학습방법
+
+  > /opt/zeroth/s5/run_kspon.sh 실행 
+  >
+  > - 불필요한 파일 제거를 위해 /opt/zeroth/s5/utils/remove_data.sh 실행
+  >
+  > - **실행 전 Stage 변수 확인**
+
+  
+
+- ARPA 파일 제작
+
+  > /opt/zeroth/s5/data/local/lm/buildLM/run_task.sh 실행
+
+  
+
+- ARPA pu
+
+
+
+- 단어 추가 방법
+
+
+
+✔ **이외의 파일 사용 방법은 각 마크다운(.md) 파일 참조**
 
 
 
@@ -31,8 +100,6 @@
 
 
 ## 딥러닝 클라이언트 구조
-
-![딥러닝들]
 
 ### E2E Text To Speech Model
 
@@ -100,7 +167,23 @@ Kaldi
 
 ### Computing Power
 
-> 
+```
+1. Work Station (Main)
+CPU: Intel(R) Xeon(R) CPU E5-2640 v3
+VGA: GTX1080Ti SLI
+RAM: 32GB (+ Swap Memory 96GB)
+HDD: SSD 1TB / HDD 3TB
+CUDA 10.1
+CUDNN 7.6.5
+
+2. Work Station2 (Sub)
+CPU: ntel(R) Xeon(R) CPU W-2223
+VGA: RTX3080
+RAM: 64GB (+ Swap Memory 128GB)
+HDD: SSD 1TB / HDD 4TB
+CUDA 11.1
+CUDNN 8.0.5
+```
 
 
 
