@@ -2,12 +2,12 @@
 
 ## 팀원
 
-| 이름   | 전공           | 메일               | 역할 |
-| ------ | -------------- | ------------------ | ------ |
-| 이찬현 | 건국대학교 전기전자공학부 | ech97@konkuk.ac.kr | 기획, 총괄 및 개발<br/>Kaldi Phrase Hint 기능 개발<br/>Server 개발 |
-| 안진혁 | 건국대학교 전기전자공학부 | hijin99@konkuk.ac.kr | kaldi Acoustic Model 최적화<br/>음성관련 딥러닝 클라이언트 개발<br/>Chatting 클라이언트 개발 |
-| 김한비 | 건국대학교 전기전자공학부 | khb200718@konkuk.ac.kr   | kaldi Launguage model 최적화<br/>언어관련 딥러닝 클라이언트 개발 |
-| 신지혜 | 건국대학교 전기전자공학부 | long0404@konkuk.ac.kr    | H/W개발 – 라즈베리파이 & 휴대폰 사운드 전송 시스템 구축<br/>3D Printing<br/>UI 개발 |
+| 이름   | 메일               | 역할 |
+| ------ | ------------------ | ------ |
+| 이찬현 | ech97@konkuk.ac.kr | 기획, 총괄 및 개발<br/>Kaldi Phrase Hint 기능 개발<br/>Server 개발 |
+| 안진혁 | hijin99@konkuk.ac.kr | kaldi Acoustic Model 최적화<br/>음성관련 딥러닝 클라이언트 개발<br/>Chatting 클라이언트 개발 |
+| 김한비 | khb200718@konkuk.ac.kr   | kaldi Launguage model 최적화<br/>언어관련 딥러닝 클라이언트 개발 |
+| 신지혜 | long0404@konkuk.ac.kr    | H/W개발 – 라즈베리파이 & 휴대폰 사운드 전송 시스템 구축<br/>3D Printing<br/>UI 개발 |
 
 
 
