@@ -303,6 +303,7 @@
 > 서버는 main server, TTS & Sentimental server, Spacing client, Chatting client, TTS receive client, Voice send client 여섯 개의 프로그램으로 구성되어있다. 연결 구조는 첨부한 사진과 같으며, 동작을 위해서는 아래와 같은 절차를 진행한다.
 
 
+> cc파일의 경우 사용을 위해서는 make를 통해 build하는 과정이 필요하다.
 
 
 ```sh
@@ -368,7 +369,7 @@ sh start.sh
 
 ### Korean Spacing Model
 
-![](./imgs/spacing_model.png)
+![spacing model]
 > 실시간으로 들어오는 문장에 대해 처리하는 만큼 정확도를 유지한 채 빠른 속도로 동작하기 위해 CNN모델을 사용했다.
 > 띄어쓰기가 잘 되어있는 한국어 문장에 랜덤하게 공백을 삭제/ 추가하고 원래의 문장으로 북구하기 위한 label을 생성함으로써 학습시켰다.
 > 0, 1, 2의 라벨을 갖게되며 0은 현상유지, 1은 띄어쓰기 추가, 2는 띄어쓰기 삭제를 의미한다.
