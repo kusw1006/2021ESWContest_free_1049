@@ -312,7 +312,7 @@
 
 > https://github.com/NVIDIA/tacotron2의 Model 사용
 
-![](./imgs/TACOTRON2.png)
+![](./imgs/Tacotron2.png)
 
 > Text2Mel을 진행해주는 Seq2Seq모델의 구조를 기반으로 하는 Neural Network이다. 문자 임베딩을 Mel-Spectrogram에 맵핑하는 반복적인 구조로 이루어져있으며, Encoder와 
 > Decoder를 연결하는 Location-Sensitive Attention이 있다. 이때 Decoder에서 AutoRegressive 
@@ -352,7 +352,7 @@
 
 > https://github.com/SKTBrain/KoBERT의 PreTrained BERT 사용
 
-![](./imgs/kobert.png)
+![](./imgs/koBERT.png)
 
 
 
