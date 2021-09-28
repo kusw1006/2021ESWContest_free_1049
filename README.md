@@ -395,7 +395,7 @@ CUDNN 8.0.5
 - Email, Password 입력 후 Enter or Login 버튼 클릭
 - Tab은 Tkinter에서 사용 불가능하여 Space로 대체
 ```
-![](./imgs/Main Chatting.png)
+![](./imgs/Main_Chatting.png)
 ```
 2. Main Chatting Interface
 - Home 버튼을 누르면 Login 화면으로 나가진다.
