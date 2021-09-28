@@ -37,7 +37,7 @@
 
 > KSponSpeech (1000 hrs) + OpenSLR (51.6 hrs)의 음향 데이터를 이용
 
-![](./imgs/graph_AM_수정.png)
+![](./imgs/graph_AM.png)
 
 ##### 1-1. Sox Pipeline
 
@@ -53,37 +53,33 @@
 >
 > 2.5억개의 문장으로 제작하였다.	
 
+##### 2-1. ARPA 제작
+
+> ```/opt/zeroth/s5/data/local/lm/buildLM/run_task.sh``` 실행
+
+##### 2-2. Pruning
+
+> ```/opt/zeroth/s5/data/local/lm/buildLM/_scripts_/buildNGRAM.sh``` 참조
+
 
 
 ### 사용방법
 
-
-
-
-
-
-
-
-
 - 학습방법
 
-  > /opt/zeroth/s5/run_kspon.sh 실행 
+  > ```/opt/zeroth/s5/run_kspon.sh``` 실행  및 markdown file 참조
   >
-  > - 불필요한 파일 제거를 위해 /opt/zeroth/s5/utils/remove_data.sh 실행
+  > - 불필요한 파일 제거를 위해 ``` /opt/zeroth/s5/utils/remove_data.sh``` ```실행
   >
   > - **실행 전 Stage 변수 확인**
 
   
 
-- ARPA 파일 제작
+- 학습 파일 추출 방법
 
-  > /opt/zeroth/s5/data/local/lm/buildLM/run_task.sh 실행
+  > ```/opt/zeroth/s5/local/export.sh``` 참조
 
   
-
-- ARPA pu
-
-
 
 - 단어 추가 방법
 
@@ -139,11 +135,9 @@
 
 
 
-### KADLI Speech To Text
-
-
-
 ### Korean Spacing Model
+
+
 
 
 
