@@ -2,6 +2,8 @@ package com.example.vvs_sum;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
@@ -28,6 +30,16 @@ import java.util.ArrayList;
 
 public class ChatRoomActivity2 extends AppCompatActivity {
 
+    private MyAdapter adapter;
+
+    final Handler handler = new Handler(){
+        public void handleMessage(Message msg){
+            RecyclerView recyvlerv = findViewById(R.id.recyvlerv);
+            adapter.notifyDataSetChanged();
+            recyvlerv.scrollToPosition(dataList.size()-1);
+        }
+    };
+
     public TextView Toptext;
     public Button ConnButton;
     public Button DiconButton;
@@ -37,6 +49,7 @@ public class ChatRoomActivity2 extends AppCompatActivity {
     String TAG = "socketTest";
 
     private ArrayList<DataItem> dataList;
+    LinearLayoutManager manager = new LinearLayoutManager(this,RecyclerView.VERTICAL,false);
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -46,7 +59,6 @@ public class ChatRoomActivity2 extends AppCompatActivity {
         ConnButton = findViewById(R.id.button1);
         DiconButton = findViewById(R.id.button2);
         SendButton = findViewById(R.id.btn_send1);
-        RecyclerView recyvlerv = findViewById(R.id.recyvlerv);
 
         Log.i(TAG, "Application created");
 
@@ -90,15 +102,38 @@ public class ChatRoomActivity2 extends AppCompatActivity {
             }
         });
 
-        initData();
+        init();
+    }
+
+    private void init(){
+        RecyclerView recyvlerv = findViewById(R.id.recyvlerv);
 
         LinearLayoutManager manager = new LinearLayoutManager(this,RecyclerView.VERTICAL,false);
+
+        initData();
+
         recyvlerv.setLayoutManager(manager);
-        recyvlerv.setAdapter(new MyAdapter(dataList));
+
+        adapter = new MyAdapter(dataList);
+        recyvlerv.setAdapter(adapter);
+
         recyvlerv.scrollToPosition(dataList.size()-1);
     }
 
+    private void refresh_right(String str){
+        dataList.add(new DataItem(str,"고객",Code.ViewType.RIGHT_CONTENT));
+        Message msg = handler.obtainMessage();
+        handler.sendMessage(msg);
+    }
+
+    private void refresh_left(String str){
+        dataList.add(new DataItem(str,"점주",Code.ViewType.LEFT_CONTENT));
+        Message msg = handler.obtainMessage();
+        handler.sendMessage(msg);
+    }
+
     class StartThread_send extends Thread{
+
         EditText sendtext;
 
         public StartThread_send(){
@@ -113,7 +148,10 @@ public class ChatRoomActivity2 extends AppCompatActivity {
                 byte[] data = OutData.getBytes();
                 OutputStream output = socket.getOutputStream();
                 output.write(data);
-                dataList.add(new DataItem(OutData,"고객",Code.ViewType.RIGHT_CONTENT));
+                sendtext.setText(null);
+                Log.d(TAG, "refresh 직전");
+                refresh_right(OutData);
+
                 Log.d(TAG, OutData + "COMMAND 송신");
 
             } catch (IOException e) {
@@ -205,12 +243,18 @@ public class ChatRoomActivity2 extends AppCompatActivity {
 
                 while (true) {
                     InputStream input = socket.getInputStream();
+                    Log.d(TAG, "수신");
 
                     BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+
+
+                    Log.d(TAG, "수신2");
                     data = reader.readLine();
+                    Log.d(TAG, "수신3");
+                    Log.d(TAG, data);
 
-                    dataList.add(new DataItem(data,"점주",Code.ViewType.LEFT_CONTENT));
-
+                    //dataList.add(new DataItem(data,"점주",Code.ViewType.LEFT_CONTENT));
+                    refresh_left(data);
                 }
             }catch(IOException e){
                 e.printStackTrace();
