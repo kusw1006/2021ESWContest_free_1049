@@ -86,11 +86,8 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         public LeftViewHolder(@NonNull View itemView) {
             super(itemView);
-            imgv = (CircleImageView)itemView.findViewById(R.id.imgv);
             textv_nicname = (TextView)itemView.findViewById(R.id.textv_nicname);
             textv_msg = (TextView)itemView.findViewById(R.id.textv_msg);
-            textv_time = (TextView)itemView.findViewById(R.id.textv_time);
-
         }
     }
 
@@ -101,7 +98,6 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         public RightViewHolder(@NonNull View itemView) {
             super(itemView);
             textv_msg = (TextView)itemView.findViewById(R.id.textv_msg);
-            textv_time = (TextView)itemView.findViewById(R.id.textv_time);
         }
     }
 

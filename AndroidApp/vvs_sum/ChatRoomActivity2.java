@@ -7,6 +7,7 @@ import android.os.Message;
 import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -27,10 +28,14 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class ChatRoomActivity2 extends AppCompatActivity {
 
     private MyAdapter adapter;
+
+    arraynum[] arrnum = new arraynum[500];
+    arraycount arrcount = new arraycount();
 
     final Handler handler = new Handler(){
         public void handleMessage(Message msg){
@@ -49,13 +54,14 @@ public class ChatRoomActivity2 extends AppCompatActivity {
     String TAG = "socketTest";
 
     private ArrayList<DataItem> dataList;
-    LinearLayoutManager manager = new LinearLayoutManager(this,RecyclerView.VERTICAL,false);
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.room2);   //나중에 바꾸기
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 
+        arrcount = new arraycount(1);
         ConnButton = findViewById(R.id.button1);
         DiconButton = findViewById(R.id.button2);
         SendButton = findViewById(R.id.btn_send1);
@@ -120,14 +126,25 @@ public class ChatRoomActivity2 extends AppCompatActivity {
         recyvlerv.scrollToPosition(dataList.size()-1);
     }
 
-    private void refresh_right(String str){
+    private void refresh_right(String str, int num){
         dataList.add(new DataItem(str,"고객",Code.ViewType.RIGHT_CONTENT));
         Message msg = handler.obtainMessage();
         handler.sendMessage(msg);
     }
 
-    private void refresh_left(String str){
-        dataList.add(new DataItem(str,"점주",Code.ViewType.LEFT_CONTENT));
+    private void refresh_left(String str, int num){
+        Log.d(TAG, Integer.toString(dataList.size()));
+        Log.d(TAG, Integer.toString(arrcount.returnnum()));
+        Log.d(TAG, Integer.toString(num));
+        if(arrcount.returnnum() == num){
+            arrnum[num] = new arraynum(dataList.size());
+            arrcount = new arraycount(num + 1);
+            dataList.add(arrnum[num].returnid(), new DataItem(str,"점주",Code.ViewType.LEFT_CONTENT));
+        }
+        else{
+            int put_num = arrnum[num].returnid();
+            dataList.set(put_num, new DataItem(str,"점주",Code.ViewType.LEFT_CONTENT));
+        }
         Message msg = handler.obtainMessage();
         handler.sendMessage(msg);
     }
@@ -150,7 +167,7 @@ public class ChatRoomActivity2 extends AppCompatActivity {
                 output.write(data);
                 sendtext.setText(null);
                 Log.d(TAG, "refresh 직전");
-                refresh_right(OutData);
+                refresh_right(OutData, dataList.size() + 1);
 
                 Log.d(TAG, OutData + "COMMAND 송신");
 
@@ -253,8 +270,19 @@ public class ChatRoomActivity2 extends AppCompatActivity {
                     Log.d(TAG, "수신3");
                     Log.d(TAG, data);
 
+                    int index_s = data.indexOf("{");
+                    int index_e = data.indexOf("}");
+                    String data_alpa = data.substring(index_s + 1,index_s + 2);
+                    String data_num = data.substring(index_s + 2, index_e);
+                    String data_result = data.substring(index_e + 1);
+
+                    Log.d(TAG, data_alpa);
+                    Log.d(TAG, data_num);
+                    if(data_alpa.equals("A") || data_alpa.equals("C") || data_alpa.equals("D") || data_alpa.equals("T")){
+                        refresh_left(data_result, Integer.parseInt(data_num));
+                    }
+
                     //dataList.add(new DataItem(data,"점주",Code.ViewType.LEFT_CONTENT));
-                    refresh_left(data);
                 }
             }catch(IOException e){
                 e.printStackTrace();
@@ -267,8 +295,26 @@ public class ChatRoomActivity2 extends AppCompatActivity {
 
     private void initData(){
         dataList = new ArrayList<>();
-        dataList.add(new DataItem("시용자1님 입장했음",null,Code.ViewType.CENTER_CONTENT));
-        dataList.add(new DataItem("사용자2님 입장했음",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+
+        dataList.add(new DataItem("통화 시작",null,Code.ViewType.CENTER_CONTENT));
     }
 
     @Override

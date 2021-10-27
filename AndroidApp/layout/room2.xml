@@ -3,28 +3,60 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#E7F6FF"
+    android:background="@drawable/main_back"
     tools:context="com.example.vvs_sum.ChatRoomActivity2">
-
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyvlerv"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/layout1">
+        android:layout_height="580dp"
+        android:layout_marginTop="60dp"
+        android:layout_marginBottom="80dp">
 
     </androidx.recyclerview.widget.RecyclerView>
 
     <LinearLayout
         android:id="@+id/layout1"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
+        android:layout_height="90dp"
         android:layout_alignParentBottom="true"
         android:orientation="vertical"
         android:padding="10dp">
+
+        <LinearLayout
+            android:layout_width="147dp"
+            android:layout_height="30dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/button1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:enabled="true"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="Con"
+                android:textSize="10dp" />
+
+            <Button
+                android:id="@+id/button2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:enabled="false"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="DISCON"
+                android:textSize="10dp" />
+
+        </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="35dp">
 
             <EditText
                 android:id="@+id/editText1"
@@ -43,34 +75,9 @@
                 android:layout_height="35dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_weight="1"
-                android:background="#E7F6FF"
+                android:background="#00000000"
                 android:foreground="?attr/selectableItemBackground"
                 android:scaleType="fitXY" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/button1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_weight="1"
-                android:enabled="true"
-                android:text="Connect" />
-
-            <Button
-                android:id="@+id/button2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_weight="1"
-                android:enabled="false"
-                android:text="DISCONNECT" />
 
         </LinearLayout>
     </LinearLayout>
