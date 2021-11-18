@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="300dp"
+    android:layout_height="300dp"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="10dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@color/black"
+            android:text="성별"
+            android:textSize="20dp"/>
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/radioGroup1"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="남자"
+                android:textColor="@color/black"
+                android:buttonTint="@color/black"
+                android:layout_marginLeft="60dp"
+                android:id="@+id/man"/>
+            <RadioButton
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/woman"
+                android:buttonTint="@color/black"
+                android:textColor="@color/black"
+                android:text="여자"
+                android:layout_weight="1"/>
+
+        </RadioGroup>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_marginTop="10dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="감정 세기"
+            android:textColor="@color/black"
+            android:textSize="20dp"/>
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/radioGroup2"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:buttonTint="@color/black"
+                android:text="약하게"
+                android:layout_marginLeft="20dp"
+                android:textColor="@color/black"
+                android:id="@+id/small"/>
+            <RadioButton
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/middle"
+                android:buttonTint="@color/black"
+                android:layout_marginLeft="20dp"
+                android:text="중간"
+                android:textColor="@color/black"
+                android:layout_weight="1"/>
+
+            <RadioButton
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/large"
+                android:layout_marginLeft="10dp"
+                android:buttonTint="@color/black"
+                android:text="세게"
+                android:textColor="@color/black"
+                android:layout_weight="1"/>
+
+        </RadioGroup>
+
+    </LinearLayout>
+
+    <Button
+        android:layout_width="70dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="5dp"
+        android:id="@+id/close"
+        android:text="닫기"/>
+
+    <Button
+        android:layout_width="70dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="0dp"
+        android:id="@+id/store"
+        android:text="저장"/>
+
+
+</LinearLayout>

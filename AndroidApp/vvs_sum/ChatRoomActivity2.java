@@ -1,20 +1,26 @@
 package com.example.vvs_sum;
 
 import android.app.Activity;
+import android.app.Dialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.StrictMode;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -49,6 +55,7 @@ public class ChatRoomActivity2 extends AppCompatActivity {
     public Button ConnButton;
     public Button DiconButton;
     public ImageButton SendButton;
+    public ImageButton MenuButton;
     private Socket socket;
 
     String TAG = "socketTest";
@@ -61,10 +68,20 @@ public class ChatRoomActivity2 extends AppCompatActivity {
         setContentView(R.layout.room2);   //나중에 바꾸기
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.hide();
+
+        number.getInstance().setId1(1);
+        number.getInstance().setId2(1);
+
+        RadioGroup rg1 = (RadioGroup)findViewById(R.id.radioGroup1);
+        RadioGroup rg2 = (RadioGroup)findViewById(R.id.radioGroup2);
+
         arrcount = new arraycount(1);
         ConnButton = findViewById(R.id.button1);
         DiconButton = findViewById(R.id.button2);
         SendButton = findViewById(R.id.btn_send1);
+        MenuButton = findViewById(R.id.menu);
 
         Log.i(TAG, "Application created");
 
@@ -82,6 +99,9 @@ public class ChatRoomActivity2 extends AppCompatActivity {
                 ConnectThread thread = new ConnectThread(addr);
 
                 thread.start();
+                dataList.add(new DataItem("통화 시작",null,Code.ViewType.CENTER_CONTENT));
+                RecyclerView recyvlerv = findViewById(R.id.recyvlerv);
+                recyvlerv.scrollToPosition(dataList.size()-1);
             }
         });
         SendButton.setOnClickListener(new Button.OnClickListener() {
@@ -91,6 +111,13 @@ public class ChatRoomActivity2 extends AppCompatActivity {
                 StartThread_send sthread = new StartThread_send();
 
                 sthread.start();
+            }
+        });
+        MenuButton.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(ChatRoomActivity2.this, PopActivity.class);
+                startActivity(intent);
             }
         });
         DiconButton.setOnClickListener(new Button.OnClickListener() {
@@ -162,11 +189,26 @@ public class ChatRoomActivity2 extends AppCompatActivity {
             // 데이터 송신
             try {
                 String OutData = sendtext.getText().toString();
-                byte[] data = OutData.getBytes();
+                String OutData_re = "", OutData_fi = "";
+                if(number.getInstance().getId2() == 1){
+                    OutData_re = "{0.5}" + OutData;
+                }
+                else if(number.getInstance().getId2() == 2){
+                    OutData_re = "{1.3}" + OutData;
+                }
+                else if(number.getInstance().getId2() == 3){
+                    OutData_re = "{2.0}" + OutData;
+                }
+                if(number.getInstance().getId1() == 1) {
+                    OutData_fi = "M" + OutData_re;
+                }
+                else if(number.getInstance().getId1() == 2) {
+                    OutData_fi = "W" + OutData_re;
+                }
+                byte[] data = OutData_fi.getBytes();
                 OutputStream output = socket.getOutputStream();
                 output.write(data);
                 sendtext.setText(null);
-                Log.d(TAG, "refresh 직전");
                 refresh_right(OutData, dataList.size() + 1);
 
                 Log.d(TAG, OutData + "COMMAND 송신");
@@ -189,7 +231,7 @@ public class ChatRoomActivity2 extends AppCompatActivity {
         public void run() {
             try { //클라이언트 소켓 생성
 
-                int port = 5050;
+                int port = 5052;
                 socket = new Socket(hostname, port);
                 Log.d(TAG, "Socket 생성, 연결.");
 
@@ -272,8 +314,8 @@ public class ChatRoomActivity2 extends AppCompatActivity {
 
                     int index_s = data.indexOf("{");
                     int index_e = data.indexOf("}");
-                    String data_alpa = data.substring(index_s + 1,index_s + 2);
-                    String data_num = data.substring(index_s + 2, index_e);
+                    String data_alpa = data.substring(index_s - 1,index_s);
+                    String data_num = data.substring(index_s + 1, index_e);
                     String data_result = data.substring(index_e + 1);
 
                     Log.d(TAG, data_alpa);
@@ -313,8 +355,13 @@ public class ChatRoomActivity2 extends AppCompatActivity {
         dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
         dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
         dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
-
-        dataList.add(new DataItem("통화 시작",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
+        dataList.add(new DataItem("",null,Code.ViewType.CENTER_CONTENT));
     }
 
     @Override
